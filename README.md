@@ -14,6 +14,10 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 * [UACHelper](https://github.com/falahati/UACHelper) - A helper class library to detect, manage and use UAC functionalities in your program
 * [SimpleImpersonation](https://github.com/mj1856/SimpleImpersonation) - Simple Impersonation Library for .Net
 * [Onova](https://github.com/Tyrrrz/Onova) - Unopinionated auto-update framework for desktop applications
+* [Config.NET](https://github.com/aloneguid/config) - A comprehensive, easy to use and powerful .NET configuration library
+* [MahApps.Metro](https://github.com/MahApps/MahApps.Metro) - A toolkit for creating modern WPF applications
+* [Resource-Embedder](https://github.com/MarcStan/resource-embedder) - Automatically embeds satellite assemblies into the main assembly
+* [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) - Popular high-performance JSON framework for .NET
 
 ## Versioning
 
