@@ -1,0 +1,24 @@
+﻿<Controls:MetroWindow x:Class="RunAsAdmin.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:local="clr-namespace:RunAsAdmin.Views"
+        mc:Ignorable="d"
+        Title="RunAsAdmin - a tool to run programs with admin privileges" Height="550" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        NonActiveBorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+        NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}">
+    <Controls:MetroWindow.RightWindowCommands>
+        <Controls:WindowCommands>
+            <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
+                <Button x:Name="UpdateButton" Content="Update" Click="btnUpdate_Click"/>
+            </Controls:Badged>
+        </Controls:WindowCommands>
+    </Controls:MetroWindow.RightWindowCommands>
+    <Grid>
+
+    </Grid>
+</Controls:MetroWindow>
