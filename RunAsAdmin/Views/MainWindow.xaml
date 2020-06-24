@@ -7,18 +7,52 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:local="clr-namespace:RunAsAdmin.Views"
         mc:Ignorable="d"
-        Title="RunAsAdmin - a tool to run programs with admin privileges" Height="550" Width="1000"
+        Title="RunAsAdmin" Height="260" Width="460" SizeToContent="Height"
         WindowStartupLocation="CenterScreen"
+        IsMinButtonEnabled="False"
+        IsMaxRestoreButtonEnabled="False"
+        ResizeMode="NoResize"
+        FontSize="16"
         NonActiveBorderBrush="{DynamicResource MahApps.Brushes.Accent}"
         NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}">
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
+            <ToggleButton x:Name="SettingsButton" Content="Settings" IsChecked="{Binding ElementName=switchThemeFlyout, Path=IsOpen}"/>
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
                 <Button x:Name="UpdateButton" Content="Update" Click="btnUpdate_Click"/>
             </Controls:Badged>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
+    <Controls:MetroWindow.Flyouts>
+        <Controls:FlyoutsControl>
+            <Controls:Flyout x:Name="switchThemeFlyout" Header="Themesettings" Position="Right" Width="250" >
+                <StackPanel>
+                    <Button x:Name="SwitchTheme" Click="SwitchTheme_Click" Content="Switch Theme" Margin="20 5 20 5" />
+                    <ComboBox x:Name="SwitchAccent" SelectionChanged="SwitchAccent_SelectionChanged" Height="30"  Margin="20 5 20 5" />
+                </StackPanel>
+            </Controls:Flyout>
+        </Controls:FlyoutsControl>
+    </Controls:MetroWindow.Flyouts>
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" x:Name="UserRightsInfoLabel"></Label>
+        <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" x:Name="DomainLabel"   Margin="10 0 0 0" Content="Doamin:"></Label>
+        <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" x:Name="UsernameLabel" Margin="10 0 0 0" Content="Username:"></Label>
+        <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" x:Name="PasswordLabel" Margin="10 0 0 0" Content="Password"></Label>
+        <Controls:DropDownButton Grid.Row="1" Grid.Column="1" Margin="10 10 20 10"></Controls:DropDownButton>
+        <Controls:DropDownButton Grid.Row="2" Grid.Column="1" Margin="10 10 20 10"></Controls:DropDownButton>
+        <PasswordBox Grid.Row="3" Grid.Column="1" Margin="10 10 20 10"></PasswordBox>
+        <Button Grid.Row="4" Grid.Column="0" Margin="20 10 10 20" Focusable="False" Width="125" Content="Restart"></Button>
+        <Button Grid.Row="4" Grid.Column="1" Margin="10 10 20 20" Focusable="False" Content="Start program with Admin-Rights"></Button>
     </Grid>
 </Controls:MetroWindow>
