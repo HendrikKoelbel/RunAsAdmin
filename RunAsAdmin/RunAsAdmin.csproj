@@ -276,6 +276,7 @@
   <PropertyGroup>
     <PostBuildEvent>del "$(ProjectDir)\$(OutDir)*.xml", "$(TargetDir)*.pdb"
 del "$(ProjectDir)\$(OutDir)*.exe.config"
-del "$(ProjectDir)\$(OutDir)*.dll.config"</PostBuildEvent>
+del "$(ProjectDir)\$(OutDir)*.dll.config"
+copy /Y "$(TargetPath)" "$(SolutionDir)$(SolutionName)$(TargetExt)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

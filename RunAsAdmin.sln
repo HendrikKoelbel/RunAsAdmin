@@ -5,6 +5,12 @@ VisualStudioVersion = 16.0.30204.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunAsAdmin", "RunAsAdmin\RunAsAdmin.csproj", "{CA48B25B-3826-4ACA-9D1C-908A64122301}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AFBAC3CF-927E-4860-89EC-9B4353607C46}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+		RunAsAdmin.exe = RunAsAdmin.exe
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
