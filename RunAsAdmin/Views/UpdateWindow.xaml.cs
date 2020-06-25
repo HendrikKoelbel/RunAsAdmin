@@ -14,8 +14,13 @@ namespace RunAsAdmin.Views
     /// </summary>
     public partial class UpdateWindow : MetroWindow
     {
-        readonly CancellationTokenSource UpdateCts = new CancellationTokenSource();
-        UpdateManager Manager;
+        #region Private variables
+        private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource UpdateCts = cancellationTokenSource;
+        private readonly UpdateManager Manager;
+        #endregion
+
+        #region Initialize UpdateWindow
         public UpdateWindow()
         {
             InitializeComponent();
@@ -28,6 +33,7 @@ namespace RunAsAdmin.Views
             this.LabelPercentage.Content = "0%/100%";
             Manager = updateManager;
         }
+        #endregion
 
         #region Run update
         private async void UpdateWindow_ContentRendered(object sender, EventArgs e)
@@ -36,7 +42,7 @@ namespace RunAsAdmin.Views
             {
                 using (var manager = Manager)
                 {
-                    var updatesResult = await manager.CheckForUpdatesAsync();
+                    var updatesResult = await manager.CheckForUpdatesAsync(UpdateCts.Token);
                     Progress<double> progressIndicator = new Progress<double>(ReportProgress);
 
                     // Prepare an update by downloading and extracting the package
@@ -51,9 +57,12 @@ namespace RunAsAdmin.Views
                     Environment.Exit(0);
                 }
             }
-            finally
+            catch (TaskCanceledException)
             {
-                this.Close();
+                if (UpdateCts.IsCancellationRequested)
+                {
+                    this.Close();
+                }
             }
         }
         #endregion
@@ -71,10 +80,6 @@ namespace RunAsAdmin.Views
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
             UpdateCts.Cancel();
-            if (UpdateCts.IsCancellationRequested)
-            {
-                this.Close();
-            }
         }
         #endregion
     }

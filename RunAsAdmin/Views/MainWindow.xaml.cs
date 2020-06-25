@@ -26,38 +26,42 @@ namespace RunAsAdmin.Views
             InitializeUpdater();
             InitializeUserRightsInfoLabel();
             InitializeSettings();
+            InitializeStyle();
+        }
 
+        #region Initialize
+        public void InitializeStyle()
+        {
             try
             {
                 if (File.Exists(GlobalVars.SettingsPath))
                 {
-                    if (!String.IsNullOrEmpty(GlobalVars.Settings.Theme))
+                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Theme))
                     {
-                        Enum.TryParse(GlobalVars.Settings.Theme, out GlobalVars.Themes tryParseResult);
-                        switch (tryParseResult)
-                        {
-                            case GlobalVars.Themes.Dark:
-                                ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorDark);
-                                break;
-                            case GlobalVars.Themes.Light:
-                                ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorLight);
-                                break;
-                            default:
-                                break;
-                        }
+                        if (Enum.TryParse(GlobalVars.SettingsHelper.Theme, out GlobalVars.Themes ThemesResult))
+                            switch (ThemesResult)
+                            {
+                                case GlobalVars.Themes.Dark:
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorDark);
+                                    break;
+                                case GlobalVars.Themes.Light:
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorLight);
+                                    break;
+                                default:
+                                    break;
+                            }
                     }
-                    if (!String.IsNullOrEmpty(GlobalVars.Settings.Accent))
+                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Accent))
                     {
-                        ThemeManager.Current.ChangeThemeColorScheme(Application.Current, GlobalVars.Settings.Accent);
+                        if (Enum.TryParse(GlobalVars.SettingsHelper.Accent, out GlobalVars.Accents AccentResult))
+                            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, GlobalVars.SettingsHelper.Accent);
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
         }
-
-        #region Initialize
         public void InitializeUserRightsInfoLabel()
         {
             UserRightsInfoLabel.Content = String.Format("Current user: {0} " +
@@ -115,7 +119,7 @@ namespace RunAsAdmin.Views
         }
         #endregion
 
-        #region Update Section
+        #region Update section
         readonly CancellationTokenSource UpdateCheckCts = new CancellationTokenSource();
         private async void btnUpdate_Click(object sender, RoutedEventArgs e)
         {
@@ -156,16 +160,18 @@ namespace RunAsAdmin.Views
         }
         #endregion
 
+        #region Settings section
         private void SwitchTheme_Click(object sender, RoutedEventArgs e)
         {
             ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
-            GlobalVars.Settings.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+            GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
         }
 
         private void SwitchAccent_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccent.SelectedItem.ToString());
-            GlobalVars.Settings.Accent = SwitchAccent.SelectedItem.ToString();
+            GlobalVars.SettingsHelper.Accent = SwitchAccent.SelectedItem.ToString();
         }
+        #endregion
     }
 }

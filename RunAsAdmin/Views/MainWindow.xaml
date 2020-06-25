@@ -17,10 +17,10 @@
         NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}">
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
-            <ToggleButton x:Name="SettingsButton" Content="Settings" IsChecked="{Binding ElementName=switchThemeFlyout, Path=IsOpen}"/>
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
                 <Button x:Name="UpdateButton" Content="Update" Click="btnUpdate_Click"/>
             </Controls:Badged>
+            <ToggleButton x:Name="SettingsButton" Content="Settings" IsChecked="{Binding ElementName=switchThemeFlyout, Path=IsOpen}"/>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
     <Controls:MetroWindow.Flyouts>
