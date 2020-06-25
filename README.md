@@ -22,7 +22,7 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 
 ## Versioning
 
-For the versions available, see the [tags on this repository](https://github.com/HendrikKoelbel/RunAsAdmin/Tags). 
+For the versions available, see the [tags on this repository](https://github.com/HendrikKoelbel/RunAsAdmin/tags). 
 
 ## Authors
 
