@@ -51,6 +51,10 @@ namespace RunAsAdmin.Views
             SwitchAccent.SelectionChanged -= SwitchAccent_SelectionChanged;
             SwitchAccent.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
             SwitchAccent.SelectionChanged += SwitchAccent_SelectionChanged;
+            // TODO: get this working
+            FontSizeNumericUpDown.ValueChanged -= FontSizeNumericUpDown_ValueChanged;
+            FontSizeNumericUpDown.Value = GlobalVars.SettingsHelper.FontSize;
+            FontSizeNumericUpDown.ValueChanged += FontSizeNumericUpDown_ValueChanged;
         }
 
         public void InitializeUpdater()
@@ -127,7 +131,7 @@ namespace RunAsAdmin.Views
         }
         #endregion
 
-        #region Settings section
+        #region Flyout Settings section
         private void SwitchTheme_Click(object sender, RoutedEventArgs e)
         {
             ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
@@ -138,6 +142,11 @@ namespace RunAsAdmin.Views
         {
             ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccent.SelectedItem.ToString());
             GlobalVars.SettingsHelper.Accent = SwitchAccent.SelectedItem.ToString();
+        }
+
+        private void FontSizeNumericUpDown_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+
         }
         #endregion
     }

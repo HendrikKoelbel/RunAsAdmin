@@ -39,6 +39,8 @@ namespace RunAsAdmin
         /// </summary>
         public interface ISettings
         {
+            [Option(Alias = "Font.Size", DefaultValue = null)]
+            int FontSize { get; set; }
             [Option(Alias = "Design.Theme", DefaultValue = null)]
             string Theme { get; set; }
             [Option(Alias = "Design.Accent", DefaultValue = null)]

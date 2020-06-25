@@ -29,6 +29,7 @@
                 <StackPanel>
                     <Button x:Name="SwitchTheme" Click="SwitchTheme_Click" Content="Switch Theme" Margin="20 5 20 5" />
                     <ComboBox x:Name="SwitchAccent" SelectionChanged="SwitchAccent_SelectionChanged" Height="30"  Margin="20 5 20 5" />
+                    <Controls:NumericUpDown x:Name="FontSizeNumericUpDown" ValueChanged="FontSizeNumericUpDown_ValueChanged" Height="30"  Margin="20 5 20 5" />
                 </StackPanel>
             </Controls:Flyout>
         </Controls:FlyoutsControl>
