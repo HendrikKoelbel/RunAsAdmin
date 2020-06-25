@@ -19,15 +19,18 @@ namespace RunAsAdmin.Views
     /// </summary>
     public partial class SplashScreenWindow : MetroWindow
     {
+        //Local CancellationTokenSource
         CancellationTokenSource Cts;
         public SplashScreenWindow(CancellationTokenSource cancellationTokenSource)
         {
             InitializeComponent();
+            ///Set the param name="cancellationTokenSource" to the <see cref="this.Cts"/>
             Cts = cancellationTokenSource;
         }
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            ///Cancel the Task <see cref="App.Cts"/>
             Cts.Cancel();
         }
     }

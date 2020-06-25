@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
+﻿using ControlzEx.Theming;
+using RunAsAdmin.Views;
+using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using RunAsAdmin.Views;
 
 namespace RunAsAdmin
 {
@@ -19,6 +17,8 @@ namespace RunAsAdmin
         public readonly CancellationTokenSource Cts = cancellationTokenSource;
         protected override void OnStartup(StartupEventArgs e)
         {
+            InitializeStyle();
+
             base.OnStartup(e);
 
             //Initialize the splash screen and set it as the application main window
@@ -32,7 +32,6 @@ namespace RunAsAdmin
             {
                 try
                 {
-                    Thread.Sleep(100);
                     //we need to do the work in batches so that we can report progress
                     for (int i = 1; i <= 100; i++)
                     {
@@ -40,20 +39,21 @@ namespace RunAsAdmin
                             throw new TaskCanceledException();
 
                         //Simulate a part of work being done
-                        Thread.Sleep(30);
+                        Thread.Sleep(10);
 
                         //Because we're not on the UI thread, we need to use the Dispatcher
                         //Associated with the splash screen to update the progress bar
                         splashScreen.SplashScreenProgressBar.Dispatcher.Invoke(() => splashScreen.SplashScreenProgressBar.Value = i);
+
                     }
 
                     //Once we're done we need to use the Dispatcher
                     //to create and show the MainWindow
                     this.Dispatcher.Invoke(() =>
                     {
-                    //Initialize the main window, set it as the application main window
-                    //and close the splash screen
-                    var mainWindow = new MainWindow();
+                        //Initialize the main window, set it as the application main window
+                        //and close the splash screen
+                        var mainWindow = new MainWindow();
                         this.MainWindow = mainWindow;
                         mainWindow.Show();
                         splashScreen.Close();
@@ -67,5 +67,37 @@ namespace RunAsAdmin
             }, Cts.Token);
         }
 
+        public void InitializeStyle()
+        {
+            try
+            {
+                if (File.Exists(GlobalVars.SettingsPath))
+                {
+                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Theme))
+                    {
+                        if (Enum.TryParse(GlobalVars.SettingsHelper.Theme, out GlobalVars.Themes ThemesResult))
+                            switch (ThemesResult)
+                            {
+                                case GlobalVars.Themes.Dark:
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorDark);
+                                    break;
+                                case GlobalVars.Themes.Light:
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorLight);
+                                    break;
+                                default:
+                                    break;
+                            }
+                    }
+                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Accent))
+                    {
+                        if (Enum.TryParse(GlobalVars.SettingsHelper.Accent, out GlobalVars.Accents AccentResult))
+                            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, GlobalVars.SettingsHelper.Accent);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
     }
 }

@@ -25,43 +25,10 @@ namespace RunAsAdmin.Views
             InitializeComponent();
             InitializeUpdater();
             InitializeUserRightsInfoLabel();
-            InitializeSettings();
-            InitializeStyle();
+            InitializeFlyoutSettings();
         }
 
         #region Initialize
-        public void InitializeStyle()
-        {
-            try
-            {
-                if (File.Exists(GlobalVars.SettingsPath))
-                {
-                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Theme))
-                    {
-                        if (Enum.TryParse(GlobalVars.SettingsHelper.Theme, out GlobalVars.Themes ThemesResult))
-                            switch (ThemesResult)
-                            {
-                                case GlobalVars.Themes.Dark:
-                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorDark);
-                                    break;
-                                case GlobalVars.Themes.Light:
-                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorLight);
-                                    break;
-                                default:
-                                    break;
-                            }
-                    }
-                    if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Accent))
-                    {
-                        if (Enum.TryParse(GlobalVars.SettingsHelper.Accent, out GlobalVars.Accents AccentResult))
-                            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, GlobalVars.SettingsHelper.Accent);
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
         public void InitializeUserRightsInfoLabel()
         {
             UserRightsInfoLabel.Content = String.Format("Current user: {0} " +
@@ -79,7 +46,7 @@ namespace RunAsAdmin.Views
                    WindowsIdentity.GetCurrent().Name ?? "SYSTEM",
                    UACHelper.UACHelper.DesktopOwner.ToString());
         }
-        private void InitializeSettings()
+        private void InitializeFlyoutSettings()
         {
             SwitchAccent.SelectionChanged -= SwitchAccent_SelectionChanged;
             SwitchAccent.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
