@@ -5,7 +5,7 @@
 
 # Run as Admin
 
-RunAsAdmin is a small program which allows administrators to start other programs with elevated rights.
+RunAsAdmin is a small program that allows administrators to start other programs with elevated privileges when logged in as a normal user.
 
 ## Getting Started
 You can easily download and run the program [here](https://github.com/HendrikKoelbel/RunAsAdmin/releases/latest)
