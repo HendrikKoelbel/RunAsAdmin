@@ -5,7 +5,7 @@
 
 # Run as Admin
 
-RunAsAdmin is a small project for administrators to save data locally in the PC after a single input and to use it again at the next restart.
+RunAsAdmin is a small program which allows administrators to start other programs with elevated rights.
 
 ## Getting Started
 You can easily download and run the program [here](https://github.com/HendrikKoelbel/RunAsAdmin/releases/latest)
