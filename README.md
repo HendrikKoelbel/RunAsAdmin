@@ -1,4 +1,8 @@
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/HendrikKoelbel/RunAsAdmin)
 ![GitHub Releases](https://img.shields.io/github/downloads/HendrikKoelbel/RunAsAdmin/latest/total)
+
+>> Attention: This project is a refactoring of the previously created RunAsAdmin tools.
+
 # Run as Admin
 
 RunAsAdmin is a small project for administrators to save data locally in the PC after a single input and to use it again at the next restart.
