@@ -2,6 +2,8 @@
 using RunAsAdmin.Views;
 using System;
 using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -71,8 +73,11 @@ namespace RunAsAdmin
         {
             try
             {
+                // TODO: Check for file rights
                 if (File.Exists(GlobalVars.SettingsPath))
                 {
+                    // TODO: If no file permission is available then set it to
+                    Helper.Helper.AddDirectorySecurity(GlobalVars.SettingsPath, WindowsIdentity.GetCurrent().User, FileSystemRights.FullControl, AccessControlType.Allow);
                     if (!String.IsNullOrEmpty(GlobalVars.SettingsHelper.Theme))
                     {
                         if (Enum.TryParse(GlobalVars.SettingsHelper.Theme, out GlobalVars.Themes ThemesResult))

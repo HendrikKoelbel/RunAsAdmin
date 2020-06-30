@@ -28,9 +28,9 @@ namespace RunAsAdmin
 
         #region Settings
         /// <summary>
-        /// Returns the AppData\Local\%AppName%\Settings.json file path
+        /// Returns the ProgramData\%AppName%\Settings.json file path
         /// </summary>
-        public static string SettingsPath => AppDataWithAssemblyName + "\\Settings.json";
+        public static string SettingsPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Settings.json";
         /// <summary>
         /// Creates the ConfigurationBuilder with the ISettings Interface to get or set settings
         /// </summary>
@@ -46,6 +46,12 @@ namespace RunAsAdmin
             string Theme { get; set; }
             [Option(Alias = "Design.Accent", DefaultValue = null)]
             string Accent { get; set; }
+            [Option(Alias = "UserData.Username", DefaultValue = null)]
+            public string Username { get; set; }
+            [Option(Alias = "UserData.Password", DefaultValue = null)]
+            public string Password { get; set; }
+            [Option(Alias = "UserData.Domain", DefaultValue = null)]
+            public string Domain { get; set; }
         }
         #endregion
 
@@ -88,6 +94,14 @@ namespace RunAsAdmin
         {
             return Environment.GetFolderPath(specialFolder);
         }
+        /// <summary>
+        /// Returns only the path of the application
+        /// </summary>
+        public static string BasePath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        /// <summary>
+        /// Returns the file path of the application
+        /// </summary>
+        public static string ExecutablePath => Assembly.GetExecutingAssembly().Location;
         #endregion
 
         #region MahApps Style

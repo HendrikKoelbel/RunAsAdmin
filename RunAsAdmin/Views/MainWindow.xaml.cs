@@ -4,10 +4,12 @@ using MahApps.Metro.Controls.Dialogs;
 using MahApps.Metro.IconPacks;
 using Onova;
 using Onova.Services;
+using SimpleImpersonation;
 using System;
-using System.IO;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +28,19 @@ namespace RunAsAdmin.Views
             InitializeUpdater();
             InitializeUserRightsInfoLabel();
             InitializeFlyoutSettings();
+            InitializeDataSource();
+        }
+
+        private void MetroWindow_ContentRendered(object sender, EventArgs e)
+        {
+            try
+            {
+                UsernameComboBox.Text = GlobalVars.SettingsHelper.Username;
+                DomainComboBox.Text = GlobalVars.SettingsHelper.Domain;
+                PasswordTextBox.Password = GlobalVars.SettingsHelper.Password;
+            }
+            catch
+            {}
         }
 
         #region Initialize
@@ -51,6 +66,17 @@ namespace RunAsAdmin.Views
             SwitchAccent.SelectionChanged -= SwitchAccent_SelectionChanged;
             SwitchAccent.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
             SwitchAccent.SelectionChanged += SwitchAccent_SelectionChanged;
+        }
+
+        public void InitializeDataSource()
+        {
+            try
+            {
+                Helper.Helper.SetDataSource(DomainComboBox, Helper.Helper.GetAllDomains().ToArray());
+                Helper.Helper.SetDataSource(UsernameComboBox, Helper.Helper.GetAllUsers().ToArray());
+            }
+            catch
+            {}
         }
 
         public void InitializeUpdater()
@@ -138,6 +164,149 @@ namespace RunAsAdmin.Views
         {
             ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccent.SelectedItem.ToString());
             GlobalVars.SettingsHelper.Accent = SwitchAccent.SelectedItem.ToString();
+        }
+
+        #endregion
+
+        #region Main Region: Button click events
+        private async void RestartWithAdminRightsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Checks if the imput is empty
+                if (String.IsNullOrWhiteSpace((string)DomainComboBox.Text) || String.IsNullOrWhiteSpace((string)UsernameComboBox.Text) || String.IsNullOrWhiteSpace(PasswordTextBox.Password))
+                {
+                    throw new ArgumentNullException();
+                }
+
+                await Task.Factory.StartNew(() =>
+                {
+                    bool hasAccess = false;
+
+                    var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, GlobalVars.SettingsHelper.Password);
+                    SimpleImpersonation.Impersonation.RunAsUser(credentials, SimpleImpersonation.LogonType.Interactive, () =>
+                    {
+                        using (WindowsIdentity.GetCurrent().Impersonate())
+                        {
+                            if (Helper.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
+                            {
+                                hasAccess = true;
+                            }
+                            else
+                            {
+                                hasAccess = false;
+                            }
+                        }
+                    });
+
+                    if (!hasAccess)
+                    {
+                        Helper.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
+                    }
+                });
+
+                await Task.Factory.StartNew(() =>
+                {
+                    Process p = new Process();
+
+                    ProcessStartInfo ps = new ProcessStartInfo();
+
+                    ps.FileName = GlobalVars.ExecutablePath;
+                    ps.Domain = GlobalVars.SettingsHelper.Domain;
+                    ps.UserName = GlobalVars.SettingsHelper.Username;
+                    ps.Password = Helper.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
+                    ps.LoadUserProfile = true;
+                    ps.CreateNoWindow = true;
+                    ps.UseShellExecute = false;
+
+                    p.StartInfo = ps;
+                    if (p.Start())
+                    {
+                        Environment.Exit(0);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // TODO: Logger implementation
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private void StartProgramWithAdminRightsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Checks if the imput is empty
+                if (String.IsNullOrWhiteSpace((string)DomainComboBox.Text) || String.IsNullOrWhiteSpace((string)UsernameComboBox.Text) || String.IsNullOrWhiteSpace(PasswordTextBox.Password))
+                {
+                    throw new ArgumentNullException();
+                }
+                string path = string.Empty;
+
+                //ConfigureWindowsRegistry();
+                //UpdateGroupPolicy();
+                ///Mapped drives are not available from an elevated prompt 
+                ///when UAC is configured to "Prompt for credentials" in Windows
+                ///https://support.microsoft.com/en-us/help/3035277/mapped-drives-are-not-available-from-an-elevated-prompt-when-uac-is-co#detail%20to%20configure%20the%20registry%20entry
+                ///https://stackoverflow.com/a/25908932/11189474
+                System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog();
+                fileDialog.Filter = "Application (*.exe)|*.exe";// "All Files|*.*|Link (*.lnk)|*.lnk"
+                fileDialog.Title = "Select a application";
+                fileDialog.DereferenceLinks = true;
+                fileDialog.Multiselect = true;
+                System.Windows.Forms.DialogResult result = fileDialog.ShowDialog();
+                if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
+                {
+
+                    path = fileDialog.FileName;
+
+                    Task.Factory.StartNew(() =>
+                    {
+                        //UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
+
+                        Process p = new Process();
+
+                        ProcessStartInfo ps = new ProcessStartInfo();
+
+                        ps.FileName = path;
+                        ps.Domain = GlobalVars.SettingsHelper.Domain;
+                        ps.UserName = GlobalVars.SettingsHelper.Username;
+                        ps.Password = Helper.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
+                        ps.LoadUserProfile = true;
+                        ps.CreateNoWindow = true;
+                        ps.UseShellExecute = false;
+
+                        p.StartInfo = ps;
+                        p.Start();
+                    });
+                }
+                else
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO: Logger implementation
+                Console.WriteLine(ex.Message);
+            }
+        }
+        #endregion
+
+        #region Imput changed events
+        private void PasswordTextBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            GlobalVars.SettingsHelper.Password = PasswordTextBox.Password;
+        }
+
+        private void DomainComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            GlobalVars.SettingsHelper.Domain = DomainComboBox.SelectedItem.ToString();
+        }
+
+        private void UsernameComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            GlobalVars.SettingsHelper.Username = UsernameComboBox.SelectedItem.ToString();
         }
         #endregion
     }

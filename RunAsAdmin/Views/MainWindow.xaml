@@ -13,7 +13,7 @@
         IsMaxRestoreButtonEnabled="False"
         ResizeMode="NoResize"
         NonActiveBorderBrush="{DynamicResource MahApps.Brushes.Accent}"
-        NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}">
+        NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}" ContentRendered="MetroWindow_ContentRendered">
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
@@ -48,10 +48,10 @@
         <Label Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" x:Name="DomainLabel"   Margin="10 0 0 0" Content="Doamin:"></Label>
         <Label Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" x:Name="UsernameLabel" Margin="10 0 0 0" Content="Username:"></Label>
         <Label Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" x:Name="PasswordLabel" Margin="10 0 0 0" Content="Password"></Label>
-        <Controls:DropDownButton Grid.Row="1" Grid.Column="1" Margin="10 10 20 10" x:Name="DomainDropDown"></Controls:DropDownButton>
-        <Controls:DropDownButton Grid.Row="2" Grid.Column="1" Margin="10 10 20 10" x:Name="UsernameDropDown"></Controls:DropDownButton>
-        <PasswordBox Grid.Row="3" Grid.Column="1" Margin="10 10 20 10" x:Name="PasswordTextBox"></PasswordBox>
-        <Button Grid.Row="4" Grid.Column="0" Margin="20 10 10 20" Focusable="False" Width="130" Content="Restart as Admin"></Button>
-        <Button Grid.Row="4" Grid.Column="1" Margin="10 10 20 20" Focusable="False" Content="Start program with Admin-Rights"></Button>
+        <ComboBox  Grid.Row="1" Grid.Column="1" Margin="10 10 20 10" x:Name="DomainComboBox" SelectionChanged="DomainComboBox_SelectionChanged"></ComboBox>
+        <ComboBox  Grid.Row="2" Grid.Column="1" Margin="10 10 20 10" x:Name="UsernameComboBox" SelectionChanged="UsernameComboBox_SelectionChanged"></ComboBox>
+        <PasswordBox Grid.Row="3" Grid.Column="1" Margin="10 10 20 10" x:Name="PasswordTextBox" PasswordChanged="PasswordTextBox_PasswordChanged"></PasswordBox>
+        <Button Grid.Row="4" Grid.Column="0" Margin="20 10 10 20" Focusable="False" Width="130" Content="Restart as Admin" x:Name="RestartWithAdminRightsButton" Click="RestartWithAdminRightsButton_Click"></Button>
+        <Button Grid.Row="4" Grid.Column="1" Margin="10 10 20 20" Focusable="False" Content="Start program with Admin-Rights" x:Name="StartProgramWithAdminRightsButton" Click="StartProgramWithAdminRightsButton_Click"></Button>
     </Grid>
 </Controls:MetroWindow>
