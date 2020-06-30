@@ -1,13 +1,16 @@
 ﻿using Config.Net;
 using System;
+using System.ComponentModel;
 using System.Configuration;
 using System.IO;
 using System.Reflection;
+using System.Windows.Navigation;
 
 namespace RunAsAdmin
 {
     public class GlobalVars
     {
+
         #region AutoUpdater Informations
         /// <summary>
         /// GitHub Username to the userprofile
@@ -39,8 +42,6 @@ namespace RunAsAdmin
         /// </summary>
         public interface ISettings
         {
-            [Option(Alias = "Font.Size", DefaultValue = null)]
-            int FontSize { get; set; }
             [Option(Alias = "Design.Theme", DefaultValue = null)]
             string Theme { get; set; }
             [Option(Alias = "Design.Accent", DefaultValue = null)]
@@ -77,6 +78,7 @@ namespace RunAsAdmin
         /// Returns the AppData\Local\Temp\%AppName% Path
         /// </summary>
         public static string TempPathWithAssemblyName => Path.Combine(Path.GetTempPath(), Assembly.GetEntryAssembly().GetName().Name);
+
         /// <summary>
         /// Method to get special folders
         /// </summary>

@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
-        xmlns:local="clr-namespace:RunAsAdmin.Views"
+        xmlns:local="clr-namespace:RunAsAdmin"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen" Height="125" Width="300" ShowMaxRestoreButton="False" ShowMinButton="False" ResizeMode="NoResize" Closing="MetroWindow_Closing">
     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">

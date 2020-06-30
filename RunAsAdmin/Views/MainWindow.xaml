@@ -5,14 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-        xmlns:local="clr-namespace:RunAsAdmin.Views"
+        xmlns:local="clr-namespace:RunAsAdmin"
         mc:Ignorable="d"
         Title="RunAsAdmin" Height="260" Width="460" SizeToContent="Height"
         WindowStartupLocation="CenterScreen"
         IsMinButtonEnabled="False"
         IsMaxRestoreButtonEnabled="False"
         ResizeMode="NoResize"
-        FontSize="16"
         NonActiveBorderBrush="{DynamicResource MahApps.Brushes.Accent}"
         NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}">
     <Controls:MetroWindow.RightWindowCommands>
@@ -29,7 +28,6 @@
                 <StackPanel>
                     <Button x:Name="SwitchTheme" Click="SwitchTheme_Click" Content="Switch Theme" Margin="20 5 20 5" />
                     <ComboBox x:Name="SwitchAccent" SelectionChanged="SwitchAccent_SelectionChanged" Height="30"  Margin="20 5 20 5" />
-                    <Controls:NumericUpDown x:Name="FontSizeNumericUpDown" ValueChanged="FontSizeNumericUpDown_ValueChanged" Height="30"  Margin="20 5 20 5" />
                 </StackPanel>
             </Controls:Flyout>
         </Controls:FlyoutsControl>
