@@ -1,10 +1,8 @@
 ﻿using Config.Net;
+using Serilog;
 using System;
-using System.ComponentModel;
-using System.Configuration;
 using System.IO;
 using System.Reflection;
-using System.Windows.Navigation;
 
 namespace RunAsAdmin
 {
@@ -24,6 +22,14 @@ namespace RunAsAdmin
         /// Asset name that will be downloaded from the Updater
         /// </summary>
         public static string GitHubAssetName => "RunAsAdmin.zip";
+        #endregion
+
+        #region Logger
+        /// <summary>
+        /// Returns the ProgramData\%AppName%\Logger.log file path
+        /// </summary>
+        public static string LoggerPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger.db";
+        public ILogger Log => new LoggerConfiguration().WriteTo.LiteDB(LoggerPath).CreateLogger(); 
         #endregion
 
         #region Settings

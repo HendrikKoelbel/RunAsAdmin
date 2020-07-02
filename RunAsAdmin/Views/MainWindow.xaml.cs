@@ -4,9 +4,11 @@ using MahApps.Metro.Controls.Dialogs;
 using MahApps.Metro.IconPacks;
 using Onova;
 using Onova.Services;
+using Serilog;
 using SimpleImpersonation;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.AccessControl;
@@ -24,6 +26,8 @@ namespace RunAsAdmin.Views
     {
         public MainWindow()
         {
+            Log.Error(new IOException(), "Error Message");
+
             InitializeComponent();
             InitializeUpdater();
             InitializeUserRightsInfoLabel();
@@ -72,8 +76,8 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                Helper.Helper.SetDataSource(DomainComboBox, Helper.Helper.GetAllDomains().ToArray());
-                Helper.Helper.SetDataSource(UsernameComboBox, Helper.Helper.GetAllUsers().ToArray());
+                Core.Helper.SetDataSource(DomainComboBox, Core.Helper.GetAllDomains().ToArray());
+                Core.Helper.SetDataSource(UsernameComboBox, Core.Helper.GetAllUsers().ToArray());
             }
             catch
             {}
@@ -188,7 +192,7 @@ namespace RunAsAdmin.Views
                     {
                         using (WindowsIdentity.GetCurrent().Impersonate())
                         {
-                            if (Helper.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
+                            if (Core.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
                             {
                                 hasAccess = true;
                             }
@@ -201,7 +205,7 @@ namespace RunAsAdmin.Views
 
                     if (!hasAccess)
                     {
-                        Helper.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
+                        Core.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
                     }
                 });
 
@@ -214,7 +218,7 @@ namespace RunAsAdmin.Views
                     ps.FileName = GlobalVars.ExecutablePath;
                     ps.Domain = GlobalVars.SettingsHelper.Domain;
                     ps.UserName = GlobalVars.SettingsHelper.Username;
-                    ps.Password = Helper.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
+                    ps.Password = Core.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
                     ps.LoadUserProfile = true;
                     ps.CreateNoWindow = true;
                     ps.UseShellExecute = false;
@@ -272,7 +276,7 @@ namespace RunAsAdmin.Views
                         ps.FileName = path;
                         ps.Domain = GlobalVars.SettingsHelper.Domain;
                         ps.UserName = GlobalVars.SettingsHelper.Username;
-                        ps.Password = Helper.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
+                        ps.Password = Core.Helper.GetSecureString(GlobalVars.SettingsHelper.Password);
                         ps.LoadUserProfile = true;
                         ps.CreateNoWindow = true;
                         ps.UseShellExecute = false;
