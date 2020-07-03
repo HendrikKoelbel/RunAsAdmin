@@ -26,10 +26,16 @@ namespace RunAsAdmin
 
         #region Logger
         /// <summary>
-        /// Returns the ProgramData\%AppName%\Logger.log file path
+        /// Returns the ProgramData\%AppName%\Logger.db file path
         /// </summary>
         public static string LoggerPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger.db";
-        public ILogger Log => new LoggerConfiguration().WriteTo.LiteDB(LoggerPath).CreateLogger(); 
+        /// <summary>
+        /// Returns the ProgramData\%AppName%\Logger_Year-Month-Day.db file path
+        /// </summary>
+        public static string LoggerPathWithDate => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger_"+ DateTime.Now.ToString("yyyy-MM-dd") + ".db";
+        public static ILogger Loggi => new LoggerConfiguration()
+            .WriteTo.LiteDB(LoggerPath, rollingFilePeriod: Serilog.Sinks.LiteDB.RollingPeriod.Daily)
+            .CreateLogger();
         #endregion
 
         #region Settings

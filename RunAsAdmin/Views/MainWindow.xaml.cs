@@ -8,7 +8,6 @@ using Serilog;
 using SimpleImpersonation;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.AccessControl;
@@ -26,8 +25,6 @@ namespace RunAsAdmin.Views
     {
         public MainWindow()
         {
-            Log.Error(new IOException(), "Error Message");
-
             InitializeComponent();
             InitializeUpdater();
             InitializeUserRightsInfoLabel();
@@ -44,7 +41,7 @@ namespace RunAsAdmin.Views
                 PasswordTextBox.Password = GlobalVars.SettingsHelper.Password;
             }
             catch
-            {}
+            { }
         }
 
         #region Initialize
@@ -80,7 +77,7 @@ namespace RunAsAdmin.Views
                 Core.Helper.SetDataSource(UsernameComboBox, Core.Helper.GetAllUsers().ToArray());
             }
             catch
-            {}
+            { }
         }
 
         public void InitializeUpdater()
@@ -313,5 +310,12 @@ namespace RunAsAdmin.Views
             GlobalVars.SettingsHelper.Username = UsernameComboBox.SelectedItem.ToString();
         }
         #endregion
+        private void ViewLogMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            Log.CloseAndFlush();
+            LogViewerWindow logViewerWindow = new LogViewerWindow();
+            logViewerWindow.Show();
+            GlobalVars.Loggi.Information("Nachdem Viewer offen war");
+        }
     }
 }

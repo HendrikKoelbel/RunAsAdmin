@@ -1,53 +1,64 @@
 ﻿using LiteDB;
-using LiteDB.Engine;
+using MahApps.Metro.Controls;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace RunAsAdmin.Views
 {
     /// <summary>
     /// Interaktionslogik für LogViewerWindow.xaml
     /// </summary>
-    public partial class LogViewerWindow : Window
+    public partial class LogViewerWindow : MetroWindow
     {
         public LogViewerWindow()
         {
             InitializeComponent();
+            DisplayPresetData();
         }
 
-        private List<LoggerValues> GetAll()
+
+        private List<LoggerModel> GetLoggerData()
         {
-            var list = new List<LoggerValues>();
-            using (var db = new LiteDatabase(GlobalVars.LoggerPath))
+            var list = new List<LoggerModel>();
+            // Closes the Logger connection
+            try
             {
-                var col = db.GetCollection<LoggerValues>("log");
-                foreach (LoggerValues _id in col.FindAll())
+                using (var db = new LiteDatabase(GlobalVars.LoggerPathWithDate))
                 {
-                    list.Add(_id);
+                    var Items = db.GetCollection<LoggerModel>("log");
+                    foreach (LoggerModel Item in Items.FindAll())
+                    {
+                        list.Add(Item);
+                    }
                 }
+            }
+            catch (Exception exp)
+            {
+                MessageBox.Show(exp.Message);
             }
             return list;
         }
 
         public void DisplayPresetData()
         {
-            LoggerDataGridView.ItemsSource = GetAll();
+            LoggerDataGridView.ItemsSource = GetLoggerData();
         }
     }
 
-    public class LoggerValues
+    public class LoggerModel
     {
-
+        public LiteDB.ObjectId _id { get; set; }
+        public DateTime _t { get; set; }
+        public int _ty { get; set; }
+        public int _tm { get; set; }
+        public int _td { get; set; }
+        public int _tw { get; set; }
+        public string _m { get; set; }
+        public string _mt { get; set; }
+        public string _i { get; set; }
+        public string _l { get; set; }
+        public string _x { get; set; }
     }
 }
