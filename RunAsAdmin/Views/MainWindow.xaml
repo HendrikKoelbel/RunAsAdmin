@@ -17,7 +17,7 @@
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
-                <Button x:Name="UpdateButton" Content="Update" Click="btnUpdate_Click"/>
+                <Button x:Name="UpdateButton" Content="Update" Click="UpdateButton_Click"/>
             </Controls:Badged>
             <ToggleButton x:Name="SettingsButton" Content="Settings" IsChecked="{Binding ElementName=switchThemeFlyout, Path=IsOpen}"/>
         </Controls:WindowCommands>

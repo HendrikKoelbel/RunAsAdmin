@@ -8,9 +8,19 @@
         xmlns:local="clr-namespace:RunAsAdmin"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="LogViewerWindow" Height="550" Width="1000">
+        Title="LogViewerWindow" Height="550" Width="1000" ContentRendered="LogViewerWindow_ContentRendered">
     <Grid>
-        <DataGrid x:Name="LoggerDataGridView" IsReadOnly="True">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <ComboBox Grid.Row="0" Grid.Column="0" Margin="10 10 10 10" x:Name="SimpleOrExtendedComboBox" SelectionChanged="SimpleOrExtendedComboBox_SelectionChanged"></ComboBox>
+        <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" IsReadOnly="True" AutoGenerateColumns="True" ColumnWidth="Auto">
 
         </DataGrid>
     </Grid>

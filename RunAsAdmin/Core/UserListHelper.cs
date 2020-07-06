@@ -13,25 +13,21 @@ namespace RunAsAdmin.Core
         {
             var ADUsers = new List<string>();
 
-            using (var forest = Forest.GetCurrentForest())
+            using var forest = Forest.GetCurrentForest();
+            foreach (Domain domain in forest.Domains)
             {
-                foreach (Domain domain in forest.Domains)
+                using (var context = new PrincipalContext(ContextType.Domain, domain.Name))
                 {
-                    using (var context = new PrincipalContext(ContextType.Domain, domain.Name))
+                    using var searcher = new PrincipalSearcher(new UserPrincipal(context));
+                    foreach (var result in searcher.FindAll())
                     {
-                        using (var searcher = new PrincipalSearcher(new UserPrincipal(context)))
-                        {
-                            foreach (var result in searcher.FindAll())
-                            {
-                                DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
-                                ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
-                            }
-                        }
+                        DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
+                        ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
                     }
-                    domain.Dispose();
                 }
-                return ADUsers;
+                domain.Dispose();
             }
+            return ADUsers;
         }
 
         private const int UF_ACCOUNTDISABLE = 0x0002;
@@ -41,20 +37,18 @@ namespace RunAsAdmin.Core
             try
             {
                 var path = string.Format("WinNT://{0},computer", Environment.MachineName);
-                using (var computerEntry = new DirectoryEntry(path))
+                using var computerEntry = new DirectoryEntry(path);
+                foreach (DirectoryEntry childEntry in computerEntry.Children)
                 {
-                    foreach (DirectoryEntry childEntry in computerEntry.Children)
+                    if (childEntry.SchemaClassName == "User")// filter all users
                     {
-                        if (childEntry.SchemaClassName == "User")// filter all users
+                        if (((int)childEntry.Properties["UserFlags"].Value & UF_ACCOUNTDISABLE) != UF_ACCOUNTDISABLE)// only if accounts are enabled
                         {
-                            if (((int)childEntry.Properties["UserFlags"].Value & UF_ACCOUNTDISABLE) != UF_ACCOUNTDISABLE)// only if accounts are enabled
-                            {
-                                users.Add(childEntry.Name); // add active user to list
-                            }
+                            users.Add(childEntry.Name); // add active user to list
                         }
                     }
-                    return users;
                 }
+                return users;
             }
             catch (Exception)
             {
