@@ -32,6 +32,8 @@ namespace RunAsAdmin.Views
             GlobalVars.Loggi.Information("Initialize Component, Updater, UserRightInfo, Settings and DataSource");
         }
 
+        #region Windowevents
+        // Windows shown/content rendered event
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
             try
@@ -45,6 +47,13 @@ namespace RunAsAdmin.Views
                 GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
+        // ViewLog ContextMenuItem click event
+        private void ViewLogMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            LogViewerWindow logViewerWindow = new LogViewerWindow();
+            logViewerWindow.Show();
+        }
+        #endregion
 
         #region Initialize
         public void InitializeUserRightInfoLabel()
@@ -65,6 +74,11 @@ namespace RunAsAdmin.Views
                   UACHelper.UACHelper.IsDesktopOwner.ToString(),
                   WindowsIdentity.GetCurrent().Name ?? "SYSTEM",
                   UACHelper.UACHelper.DesktopOwner.ToString());
+
+                if (!UACHelper.UACHelper.IsAdministrator)
+                {
+                    RestartWithAdminRightsButton.IsEnabled = false;
+                }
             }
             catch (Exception ex)
             {
@@ -73,9 +87,10 @@ namespace RunAsAdmin.Views
         }
         private void InitializeFlyoutSettings()
         {
-            SwitchAccent.SelectionChanged -= SwitchAccent_SelectionChanged;
-            SwitchAccent.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
-            SwitchAccent.SelectionChanged += SwitchAccent_SelectionChanged;
+            SwitchAccentComboBox.SelectionChanged -= SwitchAccentComboBox_SelectionChanged;
+            SwitchAccentComboBox.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
+            SwitchAccentComboBox.SelectedIndex = SwitchAccentComboBox.Items.IndexOf((GlobalVars.Accents)Enum.Parse(typeof(GlobalVars.Accents), GlobalVars.SettingsHelper.Accent));
+            SwitchAccentComboBox.SelectionChanged += SwitchAccentComboBox_SelectionChanged;
         }
 
         public void InitializeDataSource()
@@ -180,18 +195,18 @@ namespace RunAsAdmin.Views
         #endregion
 
         #region Flyout Settings section
-        private void SwitchTheme_Click(object sender, RoutedEventArgs e)
+        private void SwitchThemeButton_Click(object sender, RoutedEventArgs e)
         {
             ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
             GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
             GlobalVars.Loggi.Information("Theme was changed from {0} to {1}", ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme, ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme);
         }
 
-        private void SwitchAccent_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void SwitchAccentComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccent.SelectedItem.ToString());
-            GlobalVars.SettingsHelper.Accent = SwitchAccent.SelectedItem.ToString();
-            GlobalVars.Loggi.Information("Accent was changed to {0}", SwitchAccent.SelectedItem.ToString());
+            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccentComboBox.SelectedItem.ToString());
+            GlobalVars.SettingsHelper.Accent = SwitchAccentComboBox.SelectedItem.ToString();
+            GlobalVars.Loggi.Information("Accent was changed to {0}", SwitchAccentComboBox.SelectedItem.ToString());
         }
 
         #endregion
@@ -209,28 +224,17 @@ namespace RunAsAdmin.Views
 
                 await Task.Factory.StartNew(() =>
                 {
-                    bool hasAccess = false;
-
                     var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, GlobalVars.SettingsHelper.Password);
                     SimpleImpersonation.Impersonation.RunAsUser(credentials, SimpleImpersonation.LogonType.Interactive, () =>
                     {
                         using (WindowsIdentity.GetCurrent().Impersonate())
                         {
-                            if (Core.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
+                            if (!Core.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
                             {
-                                hasAccess = true;
-                            }
-                            else
-                            {
-                                hasAccess = false;
+                                Core.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
                             }
                         }
                     });
-
-                    if (!hasAccess)
-                    {
-                        Core.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
-                    }
                 });
 
                 await Task.Factory.StartNew(() =>
@@ -336,10 +340,5 @@ namespace RunAsAdmin.Views
             GlobalVars.SettingsHelper.Username = UsernameComboBox.SelectedItem.ToString();
         }
         #endregion
-        private void ViewLogMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            LogViewerWindow logViewerWindow = new LogViewerWindow();
-            logViewerWindow.Show();
-        }
     }
 }

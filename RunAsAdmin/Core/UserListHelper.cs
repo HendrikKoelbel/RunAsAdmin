@@ -8,7 +8,6 @@ namespace RunAsAdmin.Core
 {
     public static class UserListHelper
     {
-
         public static List<string> GetADUsers()
         {
             var ADUsers = new List<string>();

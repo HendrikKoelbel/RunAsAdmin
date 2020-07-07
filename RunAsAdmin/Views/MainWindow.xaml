@@ -26,8 +26,8 @@
         <Controls:FlyoutsControl>
             <Controls:Flyout x:Name="switchThemeFlyout" Header="Themesettings" Position="Right" Width="250" >
                 <StackPanel>
-                    <Button x:Name="SwitchTheme" Click="SwitchTheme_Click" Content="Switch Theme" Margin="20 5 20 5" />
-                    <ComboBox x:Name="SwitchAccent" SelectionChanged="SwitchAccent_SelectionChanged" Height="30"  Margin="20 5 20 5" />
+                    <Button x:Name="SwitchThemeButton" Click="SwitchThemeButton_Click" Content="Switch Theme" Margin="20 5 20 5" />
+                    <ComboBox x:Name="SwitchAccentComboBox" SelectionChanged="SwitchAccentComboBox_SelectionChanged" Height="30"  Margin="20 5 20 5" />
                 </StackPanel>
             </Controls:Flyout>
         </Controls:FlyoutsControl>

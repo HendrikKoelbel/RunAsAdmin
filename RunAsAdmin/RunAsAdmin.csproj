@@ -268,7 +268,6 @@
     </ApplicationDefinition>
     <Compile Include="Core\UserListHelper.cs" />
     <Compile Include="Core\DomainHelper.cs" />
-    <Compile Include="Core\DirectoryHelper.cs" />
     <Compile Include="Core\FileHelper.cs" />
     <Compile Include="Core\Helper.cs" />
     <Compile Include="Core\WM.cs" />

@@ -51,9 +51,9 @@ namespace RunAsAdmin
         /// </summary>
         public interface ISettings
         {
-            [Option(Alias = "Design.Theme", DefaultValue = null)]
+            [Option(Alias = "Design.Theme", DefaultValue = "Light")]
             string Theme { get; set; }
-            [Option(Alias = "Design.Accent", DefaultValue = null)]
+            [Option(Alias = "Design.Accent", DefaultValue = "Blue")]
             string Accent { get; set; }
             [Option(Alias = "UserData.Username", DefaultValue = null)]
             public string Username { get; set; }

@@ -26,7 +26,9 @@ namespace RunAsAdmin.Views
         }
         private void LogViewerWindow_ContentRendered(object sender, EventArgs e)
         {
-            DisplayPresetData();
+            // Set the Enum values in the ComboBox and select the simple logger view
+            SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
+            SimpleOrExtendedComboBox.SelectedItem = LoggerType.Simple;
         }
 
         private List<ExtendedLoggerModel> GetExtendedLoggerData()
@@ -66,20 +68,17 @@ namespace RunAsAdmin.Views
             return list;
         }
 
-        public void DisplayPresetData()
-        {
-            SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
-            SimpleOrExtendedComboBox.SelectedItem = LoggerType.Simple;
-        }
-
         private void SimpleOrExtendedComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+            // Clear the DataGrid
             LoggerDataGridView.ItemsSource = null;
             LoggerDataGridView.Items.Clear();
             switch (SimpleOrExtendedComboBox.SelectedItem)
             {
                 case LoggerType.Simple:
+                    // Load the simple logger view
                     LoggerDataGridView.ItemsSource = GetSimpleLoggerData();
+                    // All column headers are overwritten with the DisplayName value of the property
                     SimpleLoggerModel slm = new SimpleLoggerModel();
                     var prop1 = slm.GetType().GetProperties();
                     for (int i = 0; i < prop1.Count(); i++)
@@ -88,7 +87,9 @@ namespace RunAsAdmin.Views
                     }
                     break;
                 case LoggerType.Extended:
+                    // Load the extended logger view
                     LoggerDataGridView.ItemsSource = GetExtendedLoggerData();
+                    // All column headers are overwritten with the DisplayName value of the property
                     ExtendedLoggerModel elm = new ExtendedLoggerModel();
                     var prop2 = elm.GetType().GetProperties();
                     for (int i = 0; i < prop2.Count(); i++)
@@ -97,6 +98,7 @@ namespace RunAsAdmin.Views
                     }
                     break;
             }
+            // Refresh the DataGrid Items
             LoggerDataGridView.Items.Refresh();
         }
     }
@@ -106,7 +108,7 @@ namespace RunAsAdmin.Views
         Simple,
         Extended
     }
-
+    // Simple model with some logging values
     public class SimpleLoggerModel
     {
         [DisplayName("Date and Time")]
@@ -118,6 +120,7 @@ namespace RunAsAdmin.Views
         [DisplayName("Error Message")]
         public string _x { get; set; }
     }
+    // Extended model with all logging values
     public class ExtendedLoggerModel
     {
         [DisplayName("Log ID")]
