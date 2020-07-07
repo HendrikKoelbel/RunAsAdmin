@@ -142,6 +142,7 @@ namespace RunAsAdmin.Views
                 using var manager = new UpdateManager(new GithubPackageResolver(GlobalVars.GitHubUsername, GlobalVars.GitHubProjectName, GlobalVars.GitHubAssetName), new ZipPackageExtractor());
                 //Check for updates
                 var result = await manager.CheckForUpdatesAsync();
+                GlobalVars.Loggi.Information("Check manually for an update");
                 if (result.CanUpdate)
                 {
                     GlobalVars.Loggi.Information("Can update: {0}", result.CanUpdate);
@@ -161,6 +162,7 @@ namespace RunAsAdmin.Views
                 }
                 else
                 {
+                    GlobalVars.Loggi.Information("No update available");
                     await this.ShowMessageAsync("No update available", "There is currently no update available. Please try again later.", MessageDialogStyle.Affirmative);
                 }
             }

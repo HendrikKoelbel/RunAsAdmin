@@ -75,7 +75,6 @@ namespace RunAsAdmin
         {
             try
             {
-
                 // TODO: Check for file rights
                 if (File.Exists(GlobalVars.SettingsPath))
                 {
@@ -101,8 +100,9 @@ namespace RunAsAdmin
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
     }

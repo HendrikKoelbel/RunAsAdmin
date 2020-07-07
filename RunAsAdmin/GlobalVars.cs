@@ -1,6 +1,7 @@
 ﻿using Config.Net;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -26,15 +27,11 @@ namespace RunAsAdmin
 
         #region Logger
         /// <summary>
-        /// Returns the ProgramData\%AppName%\Logger.db file path
-        /// </summary>
-        public static string LoggerPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger.db";
-        /// <summary>
         /// Returns the ProgramData\%AppName%\Logger_Year-Month-Day.db file path
         /// </summary>
-        public static string LoggerPathWithDate => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger_"+ DateTime.Now.ToString("yyyy-MM-dd") + ".db";
+        public static string LoggerPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
         public static ILogger Loggi => new LoggerConfiguration()
-            .WriteTo.LiteDB(LoggerPath, rollingFilePeriod: Serilog.Sinks.LiteDB.RollingPeriod.Daily)
+            .WriteTo.LiteDB(LoggerPath)
             .CreateLogger();
         #endregion
 
@@ -65,6 +62,23 @@ namespace RunAsAdmin
             [Option(Alias = "UserData.Domain", DefaultValue = null)]
             public string Domain { get; set; }
         }
+        #endregion
+
+        #region Path and File List<>
+        public static List<string> ListOfAllPaths => new List<string>
+        {
+            BasePath,
+            TempPathWithAssemblyName,
+            AppDataRoaming,
+            AppDataLocal,
+            ProgramData,
+        };
+        public static List<string> ListOfAllFiles => new List<string> 
+        {
+            ExecutablePath,
+            LoggerPath,
+            SettingsPath,
+        };
         #endregion
 
         #region SpecialFolder Paths

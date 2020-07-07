@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Windows;
@@ -33,7 +34,7 @@ namespace RunAsAdmin.Views
             var list = new List<ExtendedLoggerModel>();
             try
             {
-                using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPathWithDate + ";connection=shared");
+                using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPath + ";connection=shared");
                 var Items = db.GetCollection<ExtendedLoggerModel>("log");
                 foreach (ExtendedLoggerModel Item in Items.FindAll())
                 {
@@ -51,7 +52,7 @@ namespace RunAsAdmin.Views
             var list = new List<SimpleLoggerModel>();
             try
             {
-                using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPathWithDate + ";connection=shared");
+                using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPath + ";connection=shared");
                 var Items = db.GetCollection<SimpleLoggerModel>("log");
                 foreach (SimpleLoggerModel Item in Items.FindAll())
                 {
@@ -67,7 +68,6 @@ namespace RunAsAdmin.Views
 
         public void DisplayPresetData()
         {
-            LoggerDataGridView.ItemsSource = GetSimpleLoggerData();
             SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
             SimpleOrExtendedComboBox.SelectedItem = LoggerType.Simple;
         }
@@ -80,9 +80,21 @@ namespace RunAsAdmin.Views
             {
                 case LoggerType.Simple:
                     LoggerDataGridView.ItemsSource = GetSimpleLoggerData();
+                    SimpleLoggerModel slm = new SimpleLoggerModel();
+                    var prop1 = slm.GetType().GetProperties();
+                    for (int i = 0; i < prop1.Count(); i++)
+                    {
+                        LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                    }
                     break;
                 case LoggerType.Extended:
                     LoggerDataGridView.ItemsSource = GetExtendedLoggerData();
+                    ExtendedLoggerModel elm = new ExtendedLoggerModel();
+                    var prop2 = elm.GetType().GetProperties();
+                    for (int i = 0; i < prop2.Count(); i++)
+                    {
+                        LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                    }
                     break;
             }
             LoggerDataGridView.Items.Refresh();
