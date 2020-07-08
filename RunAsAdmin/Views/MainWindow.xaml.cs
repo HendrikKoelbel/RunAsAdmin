@@ -87,6 +87,9 @@ namespace RunAsAdmin.Views
         }
         private void InitializeFlyoutSettings()
         {
+            SwitchThemeToggle.Toggled -= SwitchThemeToggle_Toggled;
+            SwitchThemeToggle.IsOn = true ? GlobalVars.SettingsHelper.Theme == ThemeManager.BaseColorDark : false;
+            SwitchThemeToggle.Toggled += SwitchThemeToggle_Toggled;
             SwitchAccentComboBox.SelectionChanged -= SwitchAccentComboBox_SelectionChanged;
             SwitchAccentComboBox.ItemsSource = Enum.GetValues(typeof(GlobalVars.Accents));
             SwitchAccentComboBox.SelectedIndex = SwitchAccentComboBox.Items.IndexOf((GlobalVars.Accents)Enum.Parse(typeof(GlobalVars.Accents), GlobalVars.SettingsHelper.Accent));
@@ -195,18 +198,64 @@ namespace RunAsAdmin.Views
         #endregion
 
         #region Flyout Settings section
+        private void SwitchThemeToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (SwitchThemeToggle.IsOn == true)
+                {
+                    // Switch Theme
+                    ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
+                    // Display current theme on the SwitchLabel
+                    SwitchThemeToggle.OnContent = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+                    // Save current theme in the settings
+                    GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+                    // Log this event
+                    GlobalVars.Loggi.Information("Theme was changed from {0} to {1}", ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme, ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme);
+                }
+                else
+                {
+                    // Switch Theme
+                    ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
+                    // Display current theme on the SwitchLabel
+                    SwitchThemeToggle.OffContent = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+                    // Save current theme in the settings
+                    GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+                    // Log this event
+                    GlobalVars.Loggi.Information("Theme was changed from {0} to {1}", ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme, ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme);
+                }
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+        }
         private void SwitchThemeButton_Click(object sender, RoutedEventArgs e)
         {
-            ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
-            GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
-            GlobalVars.Loggi.Information("Theme was changed from {0} to {1}", ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme, ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme);
+            try
+            {
+                ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
+                GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
+                GlobalVars.Loggi.Information("Theme was changed from {0} to {1}", ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme, ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme);
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
 
         private void SwitchAccentComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccentComboBox.SelectedItem.ToString());
-            GlobalVars.SettingsHelper.Accent = SwitchAccentComboBox.SelectedItem.ToString();
-            GlobalVars.Loggi.Information("Accent was changed to {0}", SwitchAccentComboBox.SelectedItem.ToString());
+            try
+            {
+                ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccentComboBox.SelectedItem.ToString());
+                GlobalVars.SettingsHelper.Accent = SwitchAccentComboBox.SelectedItem.ToString();
+                GlobalVars.Loggi.Information("Accent was changed to {0}", SwitchAccentComboBox.SelectedItem.ToString());
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
 
         #endregion
@@ -229,9 +278,9 @@ namespace RunAsAdmin.Views
                     {
                         using (WindowsIdentity.GetCurrent().Impersonate())
                         {
-                            if (!Core.Helper.HasFolderRights(GlobalVars.BasePath, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
+                            if (!Core.Helper.HasFolderRights(GlobalVars.ProgramDataWithAssemblyName, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
                             {
-                                Core.Helper.AddDirectorySecurity(GlobalVars.BasePath, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
+                                Core.Helper.AddDirectorySecurity(GlobalVars.ProgramDataWithAssemblyName, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
                             }
                         }
                     });
@@ -327,17 +376,38 @@ namespace RunAsAdmin.Views
         #region Imput changed events
         private void PasswordTextBox_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            GlobalVars.SettingsHelper.Password = PasswordTextBox.Password;
+            try
+            {
+                GlobalVars.SettingsHelper.Password = PasswordTextBox.Password;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
 
         private void DomainComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            GlobalVars.SettingsHelper.Domain = DomainComboBox.SelectedItem.ToString();
+            try
+            {
+                GlobalVars.SettingsHelper.Domain = DomainComboBox.SelectedItem.ToString();
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
 
         private void UsernameComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            GlobalVars.SettingsHelper.Username = UsernameComboBox.SelectedItem.ToString();
+            try
+            {
+                GlobalVars.SettingsHelper.Username = UsernameComboBox.SelectedItem.ToString();
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
         #endregion
     }

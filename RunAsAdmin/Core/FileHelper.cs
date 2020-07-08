@@ -13,15 +13,23 @@ namespace RunAsAdmin.Core
 {
     public static class FileHelper
     {
-        public static bool HasFolderRights(string folderPath, FileSystemRights fileRights, WindowsIdentity winUser)
+        public static bool HasFolderRights(string folderPath, FileSystemRights fileRights, string winUserString = null, WindowsIdentity winUser = null)
         {
             try
-            {
+            {                    
                 var security = Directory.GetAccessControl(folderPath);
                 var rules = security.GetAccessRules(true, true, typeof(SecurityIdentifier));
 
-                return rules.OfType<FileSystemAccessRule>().Any(r =>
-                        ((int)r.FileSystemRights & (int)fileRights) != 0 && r.IdentityReference.Value == winUser.User.Value);
+                if (winUserString != null)
+                {
+                    return rules.OfType<FileSystemAccessRule>().Any(r =>
+                       ((int)r.FileSystemRights & (int)fileRights) != 0 && r.IdentityReference.Value == winUserString);
+                }
+                else
+                {
+                    return rules.OfType<FileSystemAccessRule>().Any(r =>
+                       ((int)r.FileSystemRights & (int)fileRights) != 0 && r.IdentityReference.Value == winUser.User.Value);
+                }
             }
             catch (Exception ex)
             {

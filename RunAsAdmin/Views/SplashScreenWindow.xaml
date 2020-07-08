@@ -9,6 +9,6 @@
         WindowStartupLocation="CenterScreen" Height="125" Width="300" ShowMaxRestoreButton="False" ShowMinButton="False" ResizeMode="NoResize" Closing="MetroWindow_Closing">
     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
         <Label x:Name="SplashScreenInfoLabel" HorizontalAlignment="Center" FontSize="22" Margin="2 2 2 2">Loading the program...</Label>
-        <Controls:MetroProgressBar x:Name="SplashScreenProgressBar" Margin="2 2 2 2" Height="30" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
+        <Controls:MetroProgressBar x:Name="SplashScreenProgressBar" Margin="2 2 2 2" Height="30" IsIndeterminate="True" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>
     </StackPanel>
 </Controls:MetroWindow>

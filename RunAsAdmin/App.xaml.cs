@@ -1,10 +1,7 @@
 ﻿using ControlzEx.Theming;
-using RunAsAdmin.Core;
 using RunAsAdmin.Views;
-using Serilog;
 using System;
 using System.IO;
-using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +18,6 @@ namespace RunAsAdmin
         public readonly CancellationTokenSource Cts = cancellationTokenSource;
         protected override void OnStartup(StartupEventArgs e)
         {
-            InitializeStyle();
-
             base.OnStartup(e);
 
             //Initialize the splash screen and set it as the application main window
@@ -36,20 +31,29 @@ namespace RunAsAdmin
             {
                 try
                 {
-                    //we need to do the work in batches so that we can report progress
-                    for (int i = 1; i <= 100; i++)
-                    {
-                        if (Cts.IsCancellationRequested)
-                            throw new TaskCanceledException();
+                    ////we need to do the work in batches so that we can report progress
+                    //for (int i = 1; i <= 100; i++)
+                    //{
+                    if (Cts.IsCancellationRequested)
+                        throw new TaskCanceledException();
 
-                        //Simulate a part of work being done
-                        Thread.Sleep(10);
 
-                        //Because we're not on the UI thread, we need to use the Dispatcher
-                        //Associated with the splash screen to update the progress bar
-                        splashScreen.SplashScreenProgressBar.Dispatcher.Invoke(() => splashScreen.SplashScreenProgressBar.Value = i);
+                    splashScreen.SplashScreenInfoLabel.Dispatcher.Invoke(() => splashScreen.SplashScreenInfoLabel.Content = "Checking FileAccess...");
+                    InitializeFileAccess();
 
-                    }
+                    Thread.Sleep(50);
+
+                    splashScreen.SplashScreenInfoLabel.Dispatcher.Invoke(() => splashScreen.SplashScreenInfoLabel.Content = "Loading Style...");
+                    InitializeStyle();
+
+                    ////Simulate a part of work being done
+                    //Thread.Sleep(10);
+
+                    ////Because we're not on the UI thread, we need to use the Dispatcher
+                    ////Associated with the splash screen to update the progress bar
+                    //splashScreen.SplashScreenProgressBar.Dispatcher.Invoke(() => splashScreen.SplashScreenProgressBar.IsIndeterminate = true);
+
+                    //}
 
                     //Once we're done we need to use the Dispatcher
                     //to create and show the MainWindow
@@ -71,7 +75,7 @@ namespace RunAsAdmin
             }, Cts.Token);
         }
 
-        public void InitializeStyle()
+        public static void InitializeStyle()
         {
             try
             {
@@ -104,6 +108,24 @@ namespace RunAsAdmin
             {
                 GlobalVars.Loggi.Error(ex, ex.Message);
             }
+        }
+
+        public static void InitializeFileAccess()
+        {
+            //try
+            //{
+            //    if (Directory.Exists(GlobalVars.ProgramDataWithAssemblyName))
+            //    {
+            //        if (!Core.FileHelper.HasFolderRights(GlobalVars.ProgramDataWithAssemblyName, System.Security.AccessControl.FileSystemRights.FullControl, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username)))
+            //        {
+            //            Core.FileHelper.AddDirectorySecurity(GlobalVars.ProgramDataWithAssemblyName, WindowsIdentity.GetCurrent().Name, System.Security.AccessControl.FileSystemRights.FullControl, System.Security.AccessControl.AccessControlType.Allow);
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    GlobalVars.Loggi.Error(ex, ex.Message);
+            //}
         }
     }
 }

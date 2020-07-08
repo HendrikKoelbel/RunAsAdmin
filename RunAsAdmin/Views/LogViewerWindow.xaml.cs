@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using System.Windows;
+using System.Windows.Data;
 
 namespace RunAsAdmin.Views
 {
@@ -28,12 +30,30 @@ namespace RunAsAdmin.Views
         {
             // Set the Enum values in the ComboBox and select the simple logger view
             SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
+            SelectLogFileComboBox.ItemsSource = GetAllLogFiles();
             SimpleOrExtendedComboBox.SelectedItem = LoggerType.Simple;
         }
 
+        private static List<string> GetAllLogFiles()
+        {
+            var list = new List<string>();
+            try
+            {
+                var files = Directory.GetFiles(GlobalVars.ProgramDataWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
+                foreach (var file in files)
+                {
+                    list.Add(file);
+                }
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+            return list;
+        }
         private List<ExtendedLoggerModel> GetExtendedLoggerData()
         {
-            var list = new List<ExtendedLoggerModel>();
+            var list = new List<ExtendedLoggerModel>().OrderBy(x => x._t.TimeOfDay).ToList();
             try
             {
                 using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPath + ";connection=shared");
@@ -51,7 +71,7 @@ namespace RunAsAdmin.Views
         }
         private List<SimpleLoggerModel> GetSimpleLoggerData()
         {
-            var list = new List<SimpleLoggerModel>();
+            var list = new List<SimpleLoggerModel>().OrderBy(o => o._t.TimeOfDay).ToList();
             try
             {
                 using var db = new LiteDatabase(@"Filename=" + GlobalVars.LoggerPath + ";connection=shared");

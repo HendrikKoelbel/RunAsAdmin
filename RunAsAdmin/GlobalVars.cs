@@ -29,7 +29,7 @@ namespace RunAsAdmin
         /// <summary>
         /// Returns the ProgramData\%AppName%\Logger_Year-Month-Day.db file path
         /// </summary>
-        public static string LoggerPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
+        public static string LoggerPath => ProgramDataWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
         public static ILogger Loggi => new LoggerConfiguration()
             .WriteTo.LiteDB(LoggerPath)
             .CreateLogger();
@@ -39,7 +39,7 @@ namespace RunAsAdmin
         /// <summary>
         /// Returns the ProgramData\%AppName%\Settings.json file path
         /// </summary>
-        public static string SettingsPath => Path.Combine(ProgramData, Assembly.GetEntryAssembly().GetName().Name) + "\\Settings.json";
+        public static string SettingsPath => ProgramDataWithAssemblyName + "\\Settings.json";
         /// <summary>
         /// Creates the ConfigurationBuilder with the ISettings Interface to get or set settings
         /// </summary>
@@ -94,6 +94,10 @@ namespace RunAsAdmin
         /// Returns the ProgramData Path
         /// </summary>
         public static string ProgramData => Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        /// <summary>
+        /// Returns the ProgramData Path
+        /// </summary>
+        public static string ProgramDataWithAssemblyName => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Assembly.GetEntryAssembly().GetName().Name);
         /// <summary>
         /// Returns the local Temp path
         /// </summary>

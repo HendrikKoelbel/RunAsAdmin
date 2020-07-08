@@ -11,17 +11,19 @@
         Title="LogViewerWindow" Height="550" Width="1000" ContentRendered="LogViewerWindow_ContentRendered">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
-            <ColumnDefinition></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="0.25*"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <ComboBox Grid.Row="0" Grid.Column="0" Margin="10 10 10 10" x:Name="SimpleOrExtendedComboBox" SelectionChanged="SimpleOrExtendedComboBox_SelectionChanged"></ComboBox>
-        <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" IsReadOnly="True" AutoGenerateColumns="True" ColumnWidth="Auto">
-
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" x:Name="SelectLogFileComboBox"></ComboBox>
+        <Button Grid.Row="0" Grid.Column="2" Margin="10 10 10 10" x:Name="DeleteLogFileButton" Content="Delete"></Button>
+        <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" IsReadOnly="True" ClipboardCopyMode="ExcludeHeader" AutoGenerateColumns="True" ColumnWidth="Auto">
         </DataGrid>
     </Grid>
 </Controls:MetroWindow>
