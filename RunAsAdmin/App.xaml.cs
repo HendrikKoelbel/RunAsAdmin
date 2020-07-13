@@ -37,14 +37,12 @@ namespace RunAsAdmin
                     if (Cts.IsCancellationRequested)
                         throw new TaskCanceledException();
 
-
-                    splashScreen.SplashScreenInfoLabel.Dispatcher.Invoke(() => splashScreen.SplashScreenInfoLabel.Content = "Checking FileAccess...");
-                    InitializeFileAccess();
-
                     Thread.Sleep(50);
 
                     splashScreen.SplashScreenInfoLabel.Dispatcher.Invoke(() => splashScreen.SplashScreenInfoLabel.Content = "Loading Style...");
                     InitializeStyle();
+
+                    Thread.Sleep(50);
 
                     ////Simulate a part of work being done
                     //Thread.Sleep(10);
@@ -108,24 +106,6 @@ namespace RunAsAdmin
             {
                 GlobalVars.Loggi.Error(ex, ex.Message);
             }
-        }
-
-        public static void InitializeFileAccess()
-        {
-            //try
-            //{
-            //    if (Directory.Exists(GlobalVars.ProgramDataWithAssemblyName))
-            //    {
-            //        if (!Core.FileHelper.HasFolderRights(GlobalVars.ProgramDataWithAssemblyName, System.Security.AccessControl.FileSystemRights.FullControl, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username)))
-            //        {
-            //            Core.FileHelper.AddDirectorySecurity(GlobalVars.ProgramDataWithAssemblyName, WindowsIdentity.GetCurrent().Name, System.Security.AccessControl.FileSystemRights.FullControl, System.Security.AccessControl.AccessControlType.Allow);
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    GlobalVars.Loggi.Error(ex, ex.Message);
-            //}
         }
     }
 }

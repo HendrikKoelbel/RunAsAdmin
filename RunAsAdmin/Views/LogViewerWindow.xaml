@@ -21,8 +21,8 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <ComboBox Grid.Row="0" Grid.Column="0" Margin="10 10 10 10" x:Name="SimpleOrExtendedComboBox" SelectionChanged="SimpleOrExtendedComboBox_SelectionChanged"></ComboBox>
-        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" x:Name="SelectLogFileComboBox"></ComboBox>
-        <Button Grid.Row="0" Grid.Column="2" Margin="10 10 10 10" x:Name="DeleteLogFileButton" Content="Delete"></Button>
+        <ComboBox Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" x:Name="SelectLogFileComboBox" SelectionChanged="SelectLogFileComboBox_SelectionChanged"></ComboBox>
+        <Button Grid.Row="0" Grid.Column="2" Margin="10 10 10 10" x:Name="DeleteLogFileButton" Content="Delete" Click="DeleteLogFileButton_Click"></Button>
         <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" IsReadOnly="True" ClipboardCopyMode="ExcludeHeader" AutoGenerateColumns="True" ColumnWidth="Auto">
         </DataGrid>
     </Grid>

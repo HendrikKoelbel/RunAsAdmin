@@ -7,6 +7,7 @@ using Onova.Services;
 using SimpleImpersonation;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.AccessControl;
@@ -24,12 +25,12 @@ namespace RunAsAdmin.Views
     {
         public MainWindow()
         {
+            GlobalVars.Loggi.Information("Initialize Component, Updater, UserRightInfo, Settings and DataSource");
             InitializeComponent();
             InitializeUpdater();
             InitializeUserRightInfoLabel();
             InitializeFlyoutSettings();
             InitializeDataSource();
-            GlobalVars.Loggi.Information("Initialize Component, Updater, UserRightInfo, Settings and DataSource");
         }
 
         #region Windowevents
@@ -38,9 +39,11 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                UsernameComboBox.Text = GlobalVars.SettingsHelper.Username;
-                DomainComboBox.Text = GlobalVars.SettingsHelper.Domain;
-                PasswordTextBox.Password = GlobalVars.SettingsHelper.Password;
+                InitializeStartUpDetails();
+
+                UsernameComboBox.Text = GlobalVars.SettingsHelper.Username ?? string.Empty;
+                DomainComboBox.Text = GlobalVars.SettingsHelper.Domain ?? string.Empty;
+                PasswordTextBox.Password = GlobalVars.SettingsHelper.Password ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -56,6 +59,22 @@ namespace RunAsAdmin.Views
         #endregion
 
         #region Initialize
+        public async void InitializeStartUpDetails()
+        {
+            try
+            {
+                // Startup warning if the program is started from a network path
+                DriveInfo info = new DriveInfo(GlobalVars.ExecutablePath);
+                if (info.DriveType == DriveType.Network)
+                    await this.ShowMessageAsync("Information at the start", "This program cannot be used from a server path. \nPlease run it from the desktop or a local path!");
+
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+        }
+
         public void InitializeUserRightInfoLabel()
         {
             try
@@ -346,23 +365,7 @@ namespace RunAsAdmin.Views
 
                     Task.Factory.StartNew(() =>
                     {
-                        //UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
-
-                        Process p = new Process();
-
-                        ProcessStartInfo ps = new ProcessStartInfo
-                        {
-                            FileName = path,
-                            Domain = GlobalVars.SettingsHelper.Domain,
-                            UserName = GlobalVars.SettingsHelper.Username,
-                            Password = Core.Helper.GetSecureString(GlobalVars.SettingsHelper.Password),
-                            LoadUserProfile = true,
-                            CreateNoWindow = true,
-                            UseShellExecute = false
-                        };
-
-                        p.StartInfo = ps;
-                        p.Start();
+                        UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
                     });
                 }
             }
