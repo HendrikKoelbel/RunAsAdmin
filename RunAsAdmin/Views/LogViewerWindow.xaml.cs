@@ -1,6 +1,5 @@
 ﻿using LiteDB;
 using MahApps.Metro.Controls;
-using Serilog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,17 +19,46 @@ namespace RunAsAdmin.Views
         public LogViewerWindow()
         {
             InitializeComponent();
-            // TODO: Not Working - IOException
-            //Log.CloseAndFlush();
         }
+
+        #region Properties
+        public object CurrentModel { get; set; } = new SimpleLoggerModel();
+        public string CurrentLogPath { get; set; } = GlobalVars.LoggerPath;
+        public LoggerType CurrentLoggerTypeEnum { get; set; } = LoggerType.Simple;
+        public string CurrentLoggerType { get; set; } = Enum.GetName(typeof(LoggerType), LoggerType.Simple);
+        #endregion
+
+        #region ContentRendered
         private void LogViewerWindow_ContentRendered(object sender, EventArgs e)
         {
             // Set the Enum values in the ComboBox and select the simple logger view
             SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
-            SimpleOrExtendedComboBox.SelectedItem = LoggerType.Simple;
+            SimpleOrExtendedComboBox.SelectedItem = CurrentLoggerTypeEnum;
             SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
             SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
         }
+        #endregion
+
+        #region Initialize DataGrid ItemSource
+        private void ItemSourceClear()
+        {
+            LoggerDataGridView.ItemsSource = null;
+            LoggerDataGridView.Items.Clear();
+        }
+
+        private void ItemSourceRefresh(IEnumerable itemSource = null)
+        {
+            if (itemSource != null)
+                LoggerDataGridView.ItemsSource = itemSource;
+
+            LoggerDataGridView.Items.Refresh();
+        }
+
+        private void ItemSourceAdd(IEnumerable itemSource = null)
+        {
+            LoggerDataGridView.ItemsSource = itemSource;
+        }
+        #endregion
 
         #region Logfile names and paths
         private static List<string> GetAllLogFileNames()
@@ -46,7 +74,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
             return list;
         }
@@ -63,20 +91,20 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
             return list;
         }
         #endregion
 
         #region Logger Data
-        private List<ExtendedLoggerModel> GetExtendedLoggerData(string loggerPath = null)
+        private List<ExtendedLoggerModel> GetExtendedLoggerData()
         {
             var list = new List<ExtendedLoggerModel>().OrderBy(x => x._t.TimeOfDay).ToList();
             try
             {
-                loggerPath = GlobalVars.ProgramDataWithAssemblyName + "\\" + loggerPath;
-                using var db = new LiteDatabase(@"Filename=" + loggerPath ?? GlobalVars.LoggerPath + ";connection=shared");
+                CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
+                using var db = new LiteDatabase(@"Filename=" + CurrentLogPath + ";connection=shared");
                 var Items = db.GetCollection<ExtendedLoggerModel>("log");
                 foreach (ExtendedLoggerModel Item in Items.FindAll())
                 {
@@ -85,7 +113,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
             return list;
         }
@@ -94,8 +122,8 @@ namespace RunAsAdmin.Views
             var list = new List<SimpleLoggerModel>().OrderBy(o => o._t.TimeOfDay).ToList();
             try
             {
-                loggerPath =  GlobalVars.ProgramDataWithAssemblyName + "\\" + loggerPath;
-                using var db = new LiteDatabase(@"Filename=" + loggerPath ?? GlobalVars.LoggerPath + ";connection=shared");
+                CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
+                using var db = new LiteDatabase(@"Filename=" + CurrentLogPath + ";connection=shared");
                 var Items = db.GetCollection<SimpleLoggerModel>("log");
                 foreach (SimpleLoggerModel Item in Items.FindAll())
                 {
@@ -104,26 +132,9 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
             return list;
-        }
-        #endregion
-
-        #region Initialize DataGrid ItemSource
-        private void ItemSourceClear()
-        {
-            LoggerDataGridView.ItemsSource = null;
-            LoggerDataGridView.Items.Clear();
-        }
-
-        private void ItemSourceRefresh(IEnumerable itemSource = null)
-        {
-            if (itemSource != null)
-                LoggerDataGridView.ItemsSource = itemSource;
-
-            // Refresh the DataGrid Items
-            LoggerDataGridView.Items.Refresh();
         }
         #endregion
 
@@ -132,12 +143,11 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                ItemSourceClear();
                 switch (SimpleOrExtendedComboBox.SelectedItem)
                 {
                     case LoggerType.Simple:
                         // Load the simple logger view
-                        LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
+                        //LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
                         SimpleLoggerModel slm = new SimpleLoggerModel();
                         var prop1 = slm.GetType().GetProperties();
@@ -145,10 +155,11 @@ namespace RunAsAdmin.Views
                         {
                             LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                         }
+                        ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
                         break;
                     case LoggerType.Extended:
                         // Load the extended logger view
-                        LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
+                        //LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
                         ExtendedLoggerModel elm = new ExtendedLoggerModel();
                         var prop2 = elm.GetType().GetProperties();
@@ -156,13 +167,13 @@ namespace RunAsAdmin.Views
                         {
                             LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                         }
+                        ItemSourceRefresh();
                         break;
                 }
-                ItemSourceRefresh();
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -170,12 +181,11 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                ItemSourceClear();
                 switch (SimpleOrExtendedComboBox.SelectedItem)
                 {
                     case LoggerType.Simple:
                         // Load the simple logger view
-                        LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
+                        //LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
                         SimpleLoggerModel slm = new SimpleLoggerModel();
                         var prop1 = slm.GetType().GetProperties();
@@ -183,10 +193,11 @@ namespace RunAsAdmin.Views
                         {
                             LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                         }
+                        ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
                         break;
                     case LoggerType.Extended:
                         // Load the extended logger view
-                        LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
+                        //LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
                         ExtendedLoggerModel elm = new ExtendedLoggerModel();
                         var prop2 = elm.GetType().GetProperties();
@@ -194,13 +205,13 @@ namespace RunAsAdmin.Views
                         {
                             LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                         }
+                        ItemSourceRefresh();
                         break;
                 }
-                ItemSourceRefresh();
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
 
@@ -219,7 +230,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
         #endregion
