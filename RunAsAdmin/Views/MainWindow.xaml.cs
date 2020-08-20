@@ -95,7 +95,7 @@ namespace RunAsAdmin.Views
 
                 if (!UACHelper.UACHelper.IsAdministrator)
                 {
-                    RestartWithAdminRightsButton.IsEnabled = false;
+                    StartProgramWithAdminRightsButton.IsEnabled = false;
                 }
             }
             catch (Exception ex)
