@@ -23,6 +23,9 @@ namespace RunAsAdmin.Views
     /// </summary>
     public partial class LogViewerWindow : MetroWindow
     {
+
+        // TODO: Finish the LogViewer and Update to v2.0.0
+
         public LogViewerWindow()
         {
             InitializeComponent();
