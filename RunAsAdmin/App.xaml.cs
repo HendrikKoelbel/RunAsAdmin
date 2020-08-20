@@ -14,6 +14,56 @@ namespace RunAsAdmin
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+            Startup += new StartupEventHandler(App_Startup); // Can be called from XAML 
+
+            DispatcherUnhandledException += App_DispatcherUnhandledException; //Example 2 
+
+            TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException; //Example 4 
+
+            System.Windows.Forms.Application.ThreadException += WinFormApplication_ThreadException; //Example 5 
+        }
+        void App_Startup(object sender, StartupEventArgs e)
+        {
+            //Here if called from XAML, otherwise, this code can be in App() 
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException; // Example 3 
+        }
+        #region Catch UnhandledExceptions
+
+        // Example 2 
+        void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        {
+            MessageBox.Show(e.Exception.Message);
+            e.Handled = true;
+        }
+
+        // Example 3 
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+            MessageBox.Show(exception.Message);
+            if (e.IsTerminating)
+            {
+                //Now is a good time to write that critical error file!
+            }
+        }
+
+        // Example 4 
+        void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            MessageBox.Show(e.Exception.Message);
+            e.SetObserved();
+        }
+
+        // Example 5 
+        void WinFormApplication_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            MessageBox.Show(e.Exception.Message);
+        }
+        #endregion
+
+
         private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
         public readonly CancellationTokenSource Cts = cancellationTokenSource;
         protected override void OnStartup(StartupEventArgs e)

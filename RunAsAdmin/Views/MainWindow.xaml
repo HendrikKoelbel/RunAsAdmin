@@ -13,7 +13,7 @@
         IsMaxRestoreButtonEnabled="False"
         ResizeMode="NoResize"
         NonActiveBorderBrush="{DynamicResource MahApps.Brushes.Accent}"
-        NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}" ContentRendered="MetroWindow_ContentRendered">
+        NonActiveWindowTitleBrush="{DynamicResource MahApps.Brushes.Accent}" ContentRendered="MetroWindow_ContentRendered" Closing="MetroWindow_Closing">
     <Controls:MetroWindow.RightWindowCommands>
         <Controls:WindowCommands>
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">

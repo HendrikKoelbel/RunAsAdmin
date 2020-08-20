@@ -6,15 +6,18 @@ using Onova;
 using Onova.Services;
 using SimpleImpersonation;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Trinet.Core.IO.Ntfs;
 
 namespace RunAsAdmin.Views
 {
@@ -349,7 +352,6 @@ namespace RunAsAdmin.Views
                 {
                     throw new ArgumentNullException();
                 }
-                string path = string.Empty;
 
                 ///Mapped drives are not available from an elevated prompt 
                 ///when UAC is configured to "Prompt for credentials" in Windows
@@ -357,7 +359,7 @@ namespace RunAsAdmin.Views
                 ///https://stackoverflow.com/a/25908932/11189474
                 System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog
                 {
-                    Filter = "Application (*.exe)|*.exe",// "All Files|*.*|Link (*.lnk)|*.lnk"
+                    Filter = "Application (*.exe)|*.exe|All Files|*.*",// "All Files|*.*|Link (*.lnk)|*.lnk"
                     Title = "Select a application",
                     DereferenceLinks = true,
                     Multiselect = true
@@ -365,13 +367,22 @@ namespace RunAsAdmin.Views
                 System.Windows.Forms.DialogResult result = fileDialog.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
                 {
-
-                    path = fileDialog.FileName;
-
-                    Task.Factory.StartNew(() =>
+                    string[] paths = fileDialog.FileNames;
+                    FileInfo file;
+                    foreach (var path in paths)
                     {
-                        UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
-                    });
+                        file = new FileInfo(path);
+                        if (file.Exists && file.AlternateDataStreamExists("Zone.Identifier"))
+                        {
+                            bool deletedIdentifier = file.DeleteAlternateDataStream("Zone.Identifier");
+                            if (deletedIdentifier == false)
+                                return;
+                        }
+                        Task.Factory.StartNew(() =>
+                        {
+                            UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
+                        });
+                    }
                 }
             }
             catch (Exception ex)
@@ -418,5 +429,11 @@ namespace RunAsAdmin.Views
             }
         }
         #endregion
+
+        private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Application.Current.Shutdown();
+            Process.GetCurrentProcess().Kill();
+        }
     }
 }

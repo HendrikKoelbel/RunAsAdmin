@@ -270,6 +270,9 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Trinet.Core.IO.Ntfs, Version=4.1.1.0, Culture=neutral, PublicKeyToken=0aeaaa20a328a46c, processorArchitecture=MSIL">
+      <HintPath>..\packages\Trinet.Core.IO.Ntfs.4.1.1\lib\net462\Trinet.Core.IO.Ntfs.dll</HintPath>
+    </Reference>
     <Reference Include="UACHelper, Version=1.3.0.4, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\UACHelper.1.3.0.5\lib\net40\UACHelper.dll</HintPath>
     </Reference>
