@@ -184,7 +184,7 @@ namespace RunAsAdmin.Views
                     GlobalVars.Loggi.Information("Can update: {0}", result.CanUpdate);
                     MessageDialogResult dialogResult = await this.ShowMessageAsync("New update available",
                      String.Format("A new version is available.\nOld version: {0}\nNew version: {1}\nDo you want to update?",
-                     Assembly.GetExecutingAssembly().GetName().Version,
+                     $"{ Assembly.GetExecutingAssembly().GetName().Version.Major}.{ Assembly.GetExecutingAssembly().GetName().Version.Minor}.{ Assembly.GetExecutingAssembly().GetName().Version.Build}",
                      result.LastVersion)
                      , MessageDialogStyle.AffirmativeAndNegative);
                     GlobalVars.Loggi.Information("Old version: {0}", Assembly.GetExecutingAssembly().GetName().Version);
