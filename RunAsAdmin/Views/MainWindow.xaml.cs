@@ -14,6 +14,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 
 namespace RunAsAdmin.Views
 {
@@ -288,6 +289,7 @@ namespace RunAsAdmin.Views
                 {
                     throw new ArgumentNullException();
                 }
+                Mouse.OverrideCursor = Cursors.Wait;
 
                 bool hasAccess = false;
                 await Task.Factory.StartNew(() =>
@@ -297,7 +299,6 @@ namespace RunAsAdmin.Views
                     {
                         using (WindowsIdentity.GetCurrent().Impersonate())
                         {
-
                             hasAccess = Core.DirectoryHelper.HasDirectoryRights(GlobalVars.BasePath, System.Security.AccessControl.FileSystemRights.FullControl, winUser: WindowsIdentity.GetCurrent());
                         }
                     });
@@ -332,6 +333,10 @@ namespace RunAsAdmin.Views
             catch (Exception ex)
             {
                 GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 
