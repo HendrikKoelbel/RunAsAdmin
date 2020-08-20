@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,8 +24,9 @@ namespace RunAsAdmin.Views
     {
         public MainWindow()
         {
-            GlobalVars.Loggi.Information("Initialize Component, Updater, UserRightInfo, Settings and DataSource");
             InitializeComponent();
+            GlobalVars.Loggi.Information("Initialize Component, Updater, UserRightInfo, Settings and DataSource");
+            this.Title += $" - v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}.{Assembly.GetExecutingAssembly().GetName().Version.Build}";
             InitializeUpdater();
             InitializeUserRightInfoLabel();
             InitializeFlyoutSettings();
@@ -43,7 +43,7 @@ namespace RunAsAdmin.Views
 
                 UsernameComboBox.Text = GlobalVars.SettingsHelper.Username ?? string.Empty;
                 DomainComboBox.Text = GlobalVars.SettingsHelper.Domain ?? string.Empty;
-                PasswordTextBox.Password = GlobalVars.SettingsHelper.Password ?? string.Empty;
+                PasswordTextBox.Password = Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password) ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -67,7 +67,6 @@ namespace RunAsAdmin.Views
                 DriveInfo info = new DriveInfo(GlobalVars.ExecutablePath);
                 if (info.DriveType == DriveType.Network)
                     await this.ShowMessageAsync("Information at the start", "This program cannot be used from a server path. \nPlease run it from the desktop or a local path!");
-
             }
             catch (Exception ex)
             {
@@ -170,7 +169,7 @@ namespace RunAsAdmin.Views
         #endregion
 
         #region Update section
-        readonly CancellationTokenSource UpdateCheckCts = new CancellationTokenSource();
+        private readonly CancellationTokenSource UpdateCheckCts = new CancellationTokenSource();
         private async void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -290,19 +289,22 @@ namespace RunAsAdmin.Views
                     throw new ArgumentNullException();
                 }
 
+                bool hasAccess = false;
                 await Task.Factory.StartNew(() =>
                 {
-                    var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, GlobalVars.SettingsHelper.Password);
+                    var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password));
                     SimpleImpersonation.Impersonation.RunAsUser(credentials, SimpleImpersonation.LogonType.Interactive, () =>
                     {
                         using (WindowsIdentity.GetCurrent().Impersonate())
                         {
-                            if (!Core.Helper.HasFolderRights(GlobalVars.ProgramDataWithAssemblyName, FileSystemRights.FullControl, WindowsIdentity.GetCurrent()))
-                            {
-                                Core.Helper.AddDirectorySecurity(GlobalVars.ProgramDataWithAssemblyName, String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username), FileSystemRights.FullControl, AccessControlType.Allow);
-                            }
+
+                            hasAccess = Core.DirectoryHelper.HasDirectoryRights(GlobalVars.BasePath, System.Security.AccessControl.FileSystemRights.FullControl, winUser: WindowsIdentity.GetCurrent());
                         }
                     });
+                    if (!hasAccess)
+                    {
+                        Core.DirectoryHelper.AddDirectorySecurity(GlobalVars.BasePath, winUserString: String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username));
+                    }
                 });
 
                 await Task.Factory.StartNew(() =>
@@ -314,7 +316,7 @@ namespace RunAsAdmin.Views
                         FileName = GlobalVars.ExecutablePath,
                         Domain = GlobalVars.SettingsHelper.Domain,
                         UserName = GlobalVars.SettingsHelper.Username,
-                        Password = Core.Helper.GetSecureString(GlobalVars.SettingsHelper.Password),
+                        Password = Core.Helper.GetSecureString(Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password)),
                         LoadUserProfile = true,
                         CreateNoWindow = true,
                         UseShellExecute = false
@@ -344,8 +346,6 @@ namespace RunAsAdmin.Views
                 }
                 string path = string.Empty;
 
-                //ConfigureWindowsRegistry();
-                //UpdateGroupPolicy();
                 ///Mapped drives are not available from an elevated prompt 
                 ///when UAC is configured to "Prompt for credentials" in Windows
                 ///https://support.microsoft.com/en-us/help/3035277/mapped-drives-are-not-available-from-an-elevated-prompt-when-uac-is-co#detail%20to%20configure%20the%20registry%20entry
@@ -381,7 +381,7 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                GlobalVars.SettingsHelper.Password = PasswordTextBox.Password;
+                GlobalVars.SettingsHelper.Password = Core.SecurityHelper.Encrypt(PasswordTextBox.Password);
             }
             catch (Exception ex)
             {

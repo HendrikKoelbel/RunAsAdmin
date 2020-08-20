@@ -27,19 +27,19 @@ namespace RunAsAdmin
 
         #region Logger
         /// <summary>
-        /// Returns the ProgramData\%AppName%\Logger_Year-Month-Day.db file path
+        /// Returns the Users\Public\%AppName%\Logger_Year-Month-Day.db file path
         /// </summary>
-        public static string LoggerPath => ProgramDataWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
+        public static string LoggerPath => PublicDocumentsWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
         public static ILogger Loggi => new LoggerConfiguration()
-            .WriteTo.LiteDB(LoggerPath)
+            .WriteTo.SQLite(LoggerPath)
             .CreateLogger();
         #endregion
 
         #region Settings
         /// <summary>
-        /// Returns the ProgramData\%AppName%\Settings.json file path
+        /// Returns the Users\Public\%AppName%\Settings.json file path
         /// </summary>
-        public static string SettingsPath => ProgramDataWithAssemblyName + "\\Settings.json";
+        public static string SettingsPath => PublicDocumentsWithAssemblyName + "\\Settings.json";
         /// <summary>
         /// Creates the ConfigurationBuilder with the ISettings Interface to get or set settings
         /// </summary>
@@ -94,6 +94,10 @@ namespace RunAsAdmin
         /// Returns the ProgramData Path
         /// </summary>
         public static string ProgramData => Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        /// <summary>
+        /// Returns the Users\Public\Documents\%AppName% Path
+        /// </summary>
+        public static string PublicDocumentsWithAssemblyName => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Assembly.GetEntryAssembly().GetName().Name);
         /// <summary>
         /// Returns the ProgramData Path
         /// </summary>

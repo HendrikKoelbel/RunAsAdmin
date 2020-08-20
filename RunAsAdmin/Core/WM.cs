@@ -75,8 +75,6 @@ namespace RunAsAdmin.Core
         private static COMBOBOXINFO GetComboBoxInfo(Control control)
         {
             COMBOBOXINFO info = new COMBOBOXINFO();
-            //a combobox is made up of three controls, a button, a list and textbox;
-            //we want the textbox
             info.cbSize = Marshal.SizeOf(info);
             GetComboBoxInfo(control.Handle, ref info);
             return info;
