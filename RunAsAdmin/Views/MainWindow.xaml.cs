@@ -359,7 +359,7 @@ namespace RunAsAdmin.Views
                 System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog
                 {
                     Filter = "Application (*.exe)|*.exe|All Files|*.*",// "All Files|*.*|Link (*.lnk)|*.lnk"
-                    Title = "Select a application",
+                    Title = "Select the applications you want to start",
                     DereferenceLinks = true,
                     Multiselect = true
                 };
@@ -384,8 +384,9 @@ namespace RunAsAdmin.Views
                             {
                                 UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
                             }
-                            catch (Win32Exception)
+                            catch (Win32Exception win32ex)
                             {
+                                GlobalVars.Loggi.Error(win32ex, win32ex.Message);
                             }
                         });
                     }

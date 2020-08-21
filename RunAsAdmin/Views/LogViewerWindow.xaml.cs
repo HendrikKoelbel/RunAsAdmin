@@ -1,20 +1,13 @@
 ﻿using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace RunAsAdmin.Views
 {
@@ -77,21 +70,48 @@ namespace RunAsAdmin.Views
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
-            // Set the Enum values in the ComboBox and select the simple logger view
-            SimpleOrExtendedComboBox.ItemsSource = Enum.GetValues(typeof(LoggerType));
-            SimpleOrExtendedComboBox.SelectedItem = CurrentLoggerTypeEnum;
             SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
+            SelectLogFileComboBox.SelectionChanged -= SelectLogFileComboBox_SelectionChanged;
             SelectLogFileComboBox.SelectedItem = System.IO.Path.GetFileName(GlobalVars.LoggerPath);
+            SelectLogFileComboBox.SelectionChanged += SelectLogFileComboBox_SelectionChanged;
+            LoadLogData();
         }
 
-        private void SimpleOrExtendedComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        // Does not work 
+        // TODO: finish the log viewer
+        public void LoadLogData()
         {
+            try
+            {
+                string cs = $"Data Source={GlobalVars.ProgramDataWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};";
+                string stm = "SELECT * FROM 'Logs'";
+                DataTable dataTable = new DataTable();
 
+                using var con = new SQLiteConnection(cs);
+                con.Open();
+
+                using var cmd = new SQLiteCommand(stm, con);
+                var rdr = cmd.ExecuteReader();
+                dataTable.Load(rdr);
+
+                LoggerDataGridView.Items.Clear();
+                foreach (var row in dataTable.Rows)
+                {
+                    LoggerDataGridView.Items.Add(row);
+                }
+                LoggerDataGridView.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine + ex.Data + Environment.NewLine + ex.Source + Environment.NewLine +
+                    ex.StackTrace);
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
         }
 
         private void SelectLogFileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-
+            LoadLogData();
         }
 
         private void DeleteLogFileButton_Click(object sender, RoutedEventArgs e)
@@ -121,33 +141,10 @@ namespace RunAsAdmin.Views
             Simple,
             Extended
         }
-        // Simple model with some logging values
-        public class SimpleLoggerModel
+
+        private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
-            [DisplayName("Date and Time")]
-            public DateTime Timestamp { get; set; }
-            [DisplayName("Log Level")]
-            public string Level { get; set; }
-            [DisplayName("Exception")]
-            public string Exception { get; set; }
-            [DisplayName("Log Message")]
-            public string RenderedMessage { get; set; }
-        }
-        // Extended model with all logging values
-        public class ExtendedLoggerModel
-        {
-            [DisplayName("Log ID")]
-            public int id { get; set; }
-            [DisplayName("Date and Time")]
-            public DateTime Timestamp { get; set; }
-            [DisplayName("Log Level")]
-            public string Level { get; set; }
-            [DisplayName("Exception")]
-            public string Exception { get; set; }
-            [DisplayName("Log Message")]
-            public string RenderedMessage { get; set; }
-            [DisplayName("Properties")]
-            public string Properties { get; set; }
+            LoadLogData();
         }
     }
 }

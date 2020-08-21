@@ -31,7 +31,7 @@ namespace RunAsAdmin
         /// </summary>
         public static string LoggerPath => PublicDocumentsWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
         public static ILogger Loggi => new LoggerConfiguration()
-            .WriteTo.SQLite(LoggerPath)
+            .WriteTo.SQLite(LoggerPath, storeTimestampInUtc: true)
             .CreateLogger();
         #endregion
 
