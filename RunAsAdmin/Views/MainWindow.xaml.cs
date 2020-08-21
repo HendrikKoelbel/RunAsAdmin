@@ -11,7 +11,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using System.Security.Policy;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
@@ -343,7 +342,7 @@ namespace RunAsAdmin.Views
             }
         }
 
-        private void StartProgramWithAdminRightsButton_Click(object sender, RoutedEventArgs e)
+        private async void StartProgramWithAdminRightsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -367,6 +366,7 @@ namespace RunAsAdmin.Views
                 System.Windows.Forms.DialogResult result = fileDialog.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
                 {
+
                     string[] paths = fileDialog.FileNames;
                     FileInfo file;
                     foreach (var path in paths)
@@ -378,9 +378,15 @@ namespace RunAsAdmin.Views
                             if (deletedIdentifier == false)
                                 return;
                         }
-                        Task.Factory.StartNew(() =>
+                        await Task.Factory.StartNew(() =>
                         {
-                            UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
+                            try
+                            {
+                                UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
+                            }
+                            catch (Win32Exception)
+                            {
+                            }
                         });
                     }
                 }
