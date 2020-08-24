@@ -1,5 +1,6 @@
 ﻿using Config.Net;
 using Serilog;
+using Serilog.Debugging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,7 @@ using System.Reflection;
 
 namespace RunAsAdmin
 {
-    public class GlobalVars
+    public static class GlobalVars
     {
 
         #region AutoUpdater Informations
@@ -30,11 +31,12 @@ namespace RunAsAdmin
         /// Returns the Users\Public\%AppName%\Logger_Year-Month-Day.db file path
         /// </summary>
         public static string LoggerPath => PublicDocumentsWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
-        public static ILogger Loggi => new LoggerConfiguration()
-            .WriteTo.SQLite(LoggerPath, storeTimestampInUtc: true)
-            .CreateLogger();
+        // TODO: reactivate all GlobalVars.Loggi`s
+        //public static ILogger Loggi => new LoggerConfiguration()
+        //    .WriteTo.LiteDB(LoggerPath)
+        //    .CreateLogger();
         #endregion
-
+        
         #region Settings
         /// <summary>
         /// Returns the Users\Public\%AppName%\Settings.json file path
@@ -73,7 +75,7 @@ namespace RunAsAdmin
             AppDataLocal,
             ProgramData,
         };
-        public static List<string> ListOfAllFiles => new List<string> 
+        public static List<string> ListOfAllFiles => new List<string>
         {
             ExecutablePath,
             LoggerPath,

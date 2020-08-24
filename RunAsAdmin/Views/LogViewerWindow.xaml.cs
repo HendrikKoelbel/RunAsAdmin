@@ -1,11 +1,12 @@
-﻿using MahApps.Metro.Controls;
+﻿using LiteDB;
+using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -17,19 +18,11 @@ namespace RunAsAdmin.Views
     public partial class LogViewerWindow : MetroWindow
     {
 
-        // TODO: Finish the LogViewer and Update to v2.0.0
-
+        // TODO: Finish the LogViewer and Update to v2.0.
         public LogViewerWindow()
         {
             InitializeComponent();
         }
-
-        #region Properties
-        public object CurrentModel { get; set; } = new SimpleLoggerModel();
-        public string CurrentLogPath { get; set; } = GlobalVars.LoggerPath;
-        public LoggerType CurrentLoggerTypeEnum { get; set; } = LoggerType.Simple;
-        public string CurrentLoggerType { get; set; } = Enum.GetName(typeof(LoggerType), LoggerType.Simple);
-        #endregion
 
         #region Logfile names and paths
         private static List<string> GetAllLogFileNames()
@@ -45,7 +38,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
             }
             return list;
         }
@@ -62,7 +55,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
             }
             return list;
         }
@@ -70,11 +63,24 @@ namespace RunAsAdmin.Views
 
         private void MetroWindow_ContentRendered(object sender, EventArgs e)
         {
-            SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
             SelectLogFileComboBox.SelectionChanged -= SelectLogFileComboBox_SelectionChanged;
-            SelectLogFileComboBox.SelectedItem = System.IO.Path.GetFileName(GlobalVars.LoggerPath);
+            SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
+            SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
             SelectLogFileComboBox.SelectionChanged += SelectLogFileComboBox_SelectionChanged;
             LoadLogData();
+        }
+
+        private List<LogModel> GetAll()
+        {
+            List<LogModel> list = new List<LogModel>().OrderBy(x => x._t.TimeOfDay).ToList();
+            string conString = $"Filename={GlobalVars.ProgramDataWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};Connection=shared";
+            using var db = new LiteDatabase(conString);
+            var Items = db.GetCollection<LogModel>("log");
+            foreach (LogModel Item in Items.FindAll())
+            {
+                list.Add(Item);
+            }
+            return list;
         }
 
         // Does not work 
@@ -83,36 +89,23 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                string cs = $"Data Source={GlobalVars.ProgramDataWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};";
-                string stm = "SELECT * FROM 'Logs'";
-                DataTable dataTable = new DataTable();
-
-                using var con = new SQLiteConnection(cs);
-                con.Open();
-
-                using var cmd = new SQLiteCommand(stm, con);
-                var rdr = cmd.ExecuteReader();
-                dataTable.Load(rdr);
-
-                LoggerDataGridView.Items.Clear();
-                foreach (var row in dataTable.Rows)
+                // Load the simple logger view
+                LoggerDataGridView.ItemsSource = GetAll();
+                // All column headers are overwritten with the DisplayName value of the property
+                LogModel lm = new LogModel();
+                var props = lm.GetType().GetProperties();
+                for (int i = 0; i < props.Count(); i++)
                 {
-                    LoggerDataGridView.Items.Add(row);
+                    LoggerDataGridView.Columns[i].Header = props[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                 }
-                LoggerDataGridView.Items.Refresh();
+                LoggerDataGridView.ItemsSource = GetAll();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message + Environment.NewLine + ex.Data + Environment.NewLine + ex.Source + Environment.NewLine +
-                    ex.StackTrace);
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
             }
         }
 
-        private void SelectLogFileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            LoadLogData();
-        }
 
         private void DeleteLogFileButton_Click(object sender, RoutedEventArgs e)
         {
@@ -125,26 +118,50 @@ namespace RunAsAdmin.Views
                     {
                         File.Delete(file);
                         SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
-                        SelectLogFileComboBox.SelectedItem = System.IO.Path.GetFileName(GlobalVars.LoggerPath);
+                        SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
             }
         }
-
-
-        public enum LoggerType
+        private void SelectLogFileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Simple,
-            Extended
+            LoadLogData();
         }
 
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
             LoadLogData();
+        }
+
+
+        public class LogModel
+        {
+            [DisplayName("Log ID")]
+            public ObjectId _id { get; set; }
+            [DisplayName("Date and Time")]
+            public DateTime _t { get; set; }
+            [DisplayName("Year")]
+            public int _ty { get; set; }
+            [DisplayName("Month")]
+            public int _tm { get; set; }
+            [DisplayName("Day")]
+            public int _td { get; set; }
+            [DisplayName("Week")]
+            public int _tw { get; set; }
+            [DisplayName("Message")]
+            public string _m { get; set; }
+            [DisplayName("Log Message")]
+            public string _mt { get; set; }
+            [DisplayName("ID")]
+            public string _i { get; set; }
+            [DisplayName("Log Level")]
+            public string _l { get; set; }
+            [DisplayName("Error Message")]
+            public string _x { get; set; }
         }
     }
 }

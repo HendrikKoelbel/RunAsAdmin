@@ -31,7 +31,7 @@ namespace RunAsAdmin.Core
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                //GlobalVars.Loggi.Error(ex, ex.Message);
                 return false;
             }
         }

@@ -11,11 +11,10 @@
         Title="LogViewerWindow" Height="550" Width="1000" ContentRendered="MetroWindow_ContentRendered">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0.50*"></ColumnDefinition>
-            <ColumnDefinition Width="0.25*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="0.5*"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="0.5*"></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>

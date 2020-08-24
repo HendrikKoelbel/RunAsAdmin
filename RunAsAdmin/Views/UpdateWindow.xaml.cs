@@ -72,7 +72,7 @@ namespace RunAsAdmin.Views
         {
             //Update the UI to reflect the progress value that is passed back.
             this.ProgressBarUpdate.Value = value * 100;
-            this.LabelPercentage.Content = String.Format("{0}%/100%", Convert.ToInt32(value * 100));
+            this.LabelPercentage.Content = $"{Convert.ToInt32(value * 100)}%/100%";
         }
         #endregion
 

@@ -6,7 +6,7 @@
         xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:local="clr-namespace:RunAsAdmin"
         mc:Ignorable="d"
-        WindowStartupLocation="CenterScreen" Height="125" Width="300" ShowMaxRestoreButton="False" ShowMinButton="False" ResizeMode="NoResize" Closing="MetroWindow_Closing">
+        WindowStartupLocation="CenterScreen" Height="125" Width="300" ShowMaxRestoreButton="False" ShowMinButton="False" ShowCloseButton="False" Topmost="True" ResizeMode="NoResize">
     <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
         <Label x:Name="SplashScreenInfoLabel" HorizontalAlignment="Center" FontSize="22" Margin="2 2 2 2">Loading the program...</Label>
         <Controls:MetroProgressBar x:Name="SplashScreenProgressBar" Margin="2 2 2 2" Height="30" IsIndeterminate="True" Foreground="{DynamicResource MahApps.Brushes.Accent}"/>

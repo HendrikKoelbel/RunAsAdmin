@@ -1,9 +1,9 @@
-﻿using MahApps.Metro.Controls;
+﻿using LiteDB;
+using MahApps.Metro.Controls;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -23,7 +23,7 @@ namespace RunAsAdmin.Views
 
 
         #region Properties
-        public object CurrentModel { get; set; } = new SimpleLoggerModel();
+        //public object CurrentModel { get; set; } = new SimpleLoggerModel();
         public string CurrentLogPath { get; set; } = GlobalVars.LoggerPath;
         public LoggerType CurrentLoggerTypeEnum { get; set; } = LoggerType.Simple;
         public string CurrentLoggerType { get; set; } = Enum.GetName(typeof(LoggerType), LoggerType.Simple);
@@ -88,44 +88,44 @@ namespace RunAsAdmin.Views
         #endregion
 
         #region Logger Data
-        private List<ExtendedLoggerModel> GetExtendedLoggerData()
-        {
-            var list = new List<ExtendedLoggerModel>().OrderBy(x => x.Timestamp.TimeOfDay).ToList();
-            try
-            {
-                CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
-                using var db = new SQLiteConnection(@"Filename=" + CurrentLogPath + ";connection=shared");
-                //var Items = db.GetCollection<ExtendedLoggerModel>("log");
-                //foreach (ExtendedLoggerModel Item in Items.FindAll())
-                //{
-                //    list.Add(Item);
-                //}
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return list;
-        }
-        private List<SimpleLoggerModel> GetSimpleLoggerData(string loggerPath = null)
-        {
-            var list = new List<SimpleLoggerModel>().OrderBy(o => o.Timestamp.TimeOfDay).ToList();
-            try
-            {
-                CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
-                using var db = new SQLiteConnection(@"Filename=" + CurrentLogPath + ";connection=shared");
-                //var Items = db.GetCollection<SimpleLoggerModel>("log");
-                //foreach (SimpleLoggerModel Item in Items.FindAll())
-                //{
-                //    list.Add(Item);
-                //}
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-            return list;
-        }
+        //private List<ExtendedLoggerModel> GetExtendedLoggerData()
+        //{
+        //    var list = new List<ExtendedLoggerModel>().OrderBy(x => x.Timestamp.TimeOfDay).ToList();
+        //    try
+        //    {
+        //        CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
+        //        //using var db = new SQLiteConnection(@"Filename=" + CurrentLogPath + ";connection=shared");
+        //        //var Items = db.GetCollection<ExtendedLoggerModel>("log");
+        //        //foreach (ExtendedLoggerModel Item in Items.FindAll())
+        //        //{
+        //        //    list.Add(Item);
+        //        //}
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+        //    return list;
+        //}
+        //private List<SimpleLoggerModel> GetSimpleLoggerData(string loggerPath = null)
+        //{
+        //    var list = new List<SimpleLoggerModel>().OrderBy(o => o.Timestamp.TimeOfDay).ToList();
+        //    try
+        //    {
+        //        CurrentLogPath = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
+        //        //using var db = new SQLiteConnection(@"Filename=" + CurrentLogPath + ";connection=shared");
+        //        //var Items = db.GetCollection<SimpleLoggerModel>("log");
+        //        //foreach (SimpleLoggerModel Item in Items.FindAll())
+        //        //{
+        //        //    list.Add(Item);
+        //        //}
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+        //    return list;
+        //}
         #endregion
 
         #region Windowevents
@@ -139,25 +139,25 @@ namespace RunAsAdmin.Views
                         // Load the simple logger view
                         //LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
-                        SimpleLoggerModel slm = new SimpleLoggerModel();
-                        var prop1 = slm.GetType().GetProperties();
-                        for (int i = 0; i < prop1.Count(); i++)
-                        {
-                            LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-                        }
-                        ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
+                        //SimpleLoggerModel slm = new SimpleLoggerModel();
+                        //var prop1 = slm.GetType().GetProperties();
+                        //for (int i = 0; i < prop1.Count(); i++)
+                        //{
+                        //    LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                        //}
+                        //ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
                         break;
                     case LoggerType.Extended:
                         // Load the extended logger view
                         //LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
-                        ExtendedLoggerModel elm = new ExtendedLoggerModel();
-                        var prop2 = elm.GetType().GetProperties();
-                        for (int i = 0; i < prop2.Count(); i++)
-                        {
-                            LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-                        }
-                        ItemSourceRefresh();
+                        //ExtendedLoggerModel elm = new ExtendedLoggerModel();
+                        //var prop2 = elm.GetType().GetProperties();
+                        //for (int i = 0; i < prop2.Count(); i++)
+                        //{
+                        //    LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                        //}
+                        //ItemSourceRefresh();
                         break;
                 }
             }
@@ -177,25 +177,25 @@ namespace RunAsAdmin.Views
                         // Load the simple logger view
                         //LoggerDataGridView.ItemsSource = GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
-                        SimpleLoggerModel slm = new SimpleLoggerModel();
-                        var prop1 = slm.GetType().GetProperties();
-                        for (int i = 0; i < prop1.Count(); i++)
-                        {
-                            LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-                        }
-                        ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
+                        //SimpleLoggerModel slm = new SimpleLoggerModel();
+                        //var prop1 = slm.GetType().GetProperties();
+                        //for (int i = 0; i < prop1.Count(); i++)
+                        //{
+                        //    LoggerDataGridView.Columns[i].Header = prop1[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                        //}
+                        //ItemSourceRefresh(GetSimpleLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null));
                         break;
                     case LoggerType.Extended:
                         // Load the extended logger view
                         //LoggerDataGridView.ItemsSource = GetExtendedLoggerData((string)SelectLogFileComboBox.SelectedItem ?? null);
                         // All column headers are overwritten with the DisplayName value of the property
-                        ExtendedLoggerModel elm = new ExtendedLoggerModel();
-                        var prop2 = elm.GetType().GetProperties();
-                        for (int i = 0; i < prop2.Count(); i++)
-                        {
-                            LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
-                        }
-                        ItemSourceRefresh();
+                        //ExtendedLoggerModel elm = new ExtendedLoggerModel();
+                        //var prop2 = elm.GetType().GetProperties();
+                        //for (int i = 0; i < prop2.Count(); i++)
+                        //{
+                        //    LoggerDataGridView.Columns[i].Header = prop2[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
+                        //}
+                        //ItemSourceRefresh();
                         break;
                 }
             }
@@ -231,32 +231,30 @@ namespace RunAsAdmin.Views
         Simple,
         Extended
     }
-    // Simple model with some logging values
-    public class SimpleLoggerModel
-    {
-        [DisplayName("Date and Time")]
-        public DateTime Timestamp { get; set; }
-        [DisplayName("Log Level")]
-        public string Level { get; set; }
-        [DisplayName("Exception")]
-        public string Exception { get; set; }
-        [DisplayName("Log Message")]
-        public string RenderedMessage { get; set; }
-    }
-    // Extended model with all logging values
-    public class ExtendedLoggerModel
+    // Simple model with all logging values
+    public class LogModel
     {
         [DisplayName("Log ID")]
-        public int id { get; set; }
+        public ObjectId _id { get; set; }
         [DisplayName("Date and Time")]
-        public DateTime Timestamp { get; set; }
-        [DisplayName("Log Level")]
-        public string Level { get; set; }
-        [DisplayName("Exception")]
-        public string Exception { get; set; }
+        public DateTime _t { get; set; }
+        [DisplayName("Year")]
+        public int _ty { get; set; }
+        [DisplayName("Month")]
+        public int _tm { get; set; }
+        [DisplayName("Day")]
+        public int _td { get; set; }
+        [DisplayName("Week")]
+        public int _tw { get; set; }
+        [DisplayName("Message")]
+        public string _m { get; set; }
         [DisplayName("Log Message")]
-        public string RenderedMessage { get; set; }
-        [DisplayName("Properties")]
-        public string Properties { get; set; }
+        public string _mt { get; set; }
+        [DisplayName("ID")]
+        public string _i { get; set; }
+        [DisplayName("Log Level")]
+        public string _l { get; set; }
+        [DisplayName("Error Message")]
+        public string _x { get; set; }
     }
 }
