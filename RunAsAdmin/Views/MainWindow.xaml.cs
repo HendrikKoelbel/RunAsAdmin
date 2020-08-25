@@ -28,7 +28,7 @@ namespace RunAsAdmin.Views
         public MainWindow()
         {
             InitializeComponent();
-            //GlobalVars.Loggi.Information("Initialize program");
+            GlobalVars.Loggi.Information("Initialize program");
             this.Title += $" - v{Assembly.GetExecutingAssembly().GetName().Version.Major}.{Assembly.GetExecutingAssembly().GetName().Version.Minor}.{Assembly.GetExecutingAssembly().GetName().Version.Build}";
             InitializeUpdater();
             InitializeUserRightInfoLabel();
@@ -48,7 +48,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         private void ViewLogMenuItem_Click(object sender, RoutedEventArgs e)
@@ -69,7 +69,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -92,7 +92,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         private void InitializeFlyoutSettings()
@@ -115,7 +115,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -125,7 +125,7 @@ namespace RunAsAdmin.Views
             {
                 Task task = Task.Run(async () =>
                    {
-                       //GlobalVars.Loggi.Information("Start Task and check for new update every 5 minutes");
+                       GlobalVars.Loggi.Information("Start Task and check for new update every 5 minutes");
                        while (true)
                        {
                            using (var manager = new UpdateManager(new GithubPackageResolver(GlobalVars.GitHubUsername, GlobalVars.GitHubProjectName, GlobalVars.GitHubAssetName), new ZipPackageExtractor()))
@@ -155,7 +155,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         #endregion
@@ -170,39 +170,39 @@ namespace RunAsAdmin.Views
                 using var manager = new UpdateManager(new GithubPackageResolver(GlobalVars.GitHubUsername, GlobalVars.GitHubProjectName, GlobalVars.GitHubAssetName), new ZipPackageExtractor());
                 //Check for updates
                 var result = await manager.CheckForUpdatesAsync();
-                //GlobalVars.Loggi.Information("Check manually for an update");
+                GlobalVars.Loggi.Information("Check manually for an update");
                 if (result.CanUpdate)
                 {
-                    //GlobalVars.Loggi.Information("Can update: {0}", result.CanUpdate);
+                    GlobalVars.Loggi.Information("Can update: {0}", result.CanUpdate);
                     MessageDialogResult dialogResult = await this.ShowMessageAsync("New update available",
                      $"A new version is available.\nOld version: " +
                      $"{Assembly.GetExecutingAssembly().GetName().Version.Major}." +
                      $"{ Assembly.GetExecutingAssembly().GetName().Version.Minor}." +
                      $"{ Assembly.GetExecutingAssembly().GetName().Version.Build}" +
                      $"\nNew version: {result.LastVersion}\nDo you want to update?", MessageDialogStyle.AffirmativeAndNegative);
-                    //GlobalVars.Loggi.Information($"Old version: {Assembly.GetExecutingAssembly().GetName().Version}");
-                    //GlobalVars.Loggi.Information($"New version: {result.LastVersion}");
+                    GlobalVars.Loggi.Information($"Old version: {Assembly.GetExecutingAssembly().GetName().Version}");
+                    GlobalVars.Loggi.Information($"New version: {result.LastVersion}");
                     if (dialogResult == MessageDialogResult.Affirmative)
                     {
-                        //GlobalVars.Loggi.Information("Start update process");
+                        GlobalVars.Loggi.Information("Start update process");
                         UpdateWindow updateWindow = new UpdateWindow();
                         updateWindow.ShowDialog();
                     }
                 }
                 else
                 {
-                    //GlobalVars.Loggi.Information("No update available");
+                    GlobalVars.Loggi.Information("No update available");
                     await this.ShowMessageAsync("No update available", "There is currently no update available. Please try again later.", MessageDialogStyle.Affirmative);
                 }
             }
             catch (HttpRequestException httpRequestEx)
             {
-                //GlobalVars.Loggi.Warning(httpRequestEx.Message);
+                GlobalVars.Loggi.Warning(httpRequestEx.Message);
                 await this.ShowMessageAsync(httpRequestEx.GetType().Name, httpRequestEx.Message, MessageDialogStyle.Affirmative);
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
                 await this.ShowMessageAsync(ex.GetType().Name, ex.Message, MessageDialogStyle.Affirmative);
             }
         }
@@ -222,7 +222,7 @@ namespace RunAsAdmin.Views
                     // Save current theme in the settings
                     GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
                     // Log this event
-                    //GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
+                    GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
                 }
                 else
                 {
@@ -233,12 +233,12 @@ namespace RunAsAdmin.Views
                     // Save current theme in the settings
                     GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
                     // Log this event
-                    //GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
+                    GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
                 }
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         private void SwitchThemeButton_Click(object sender, RoutedEventArgs e)
@@ -247,11 +247,11 @@ namespace RunAsAdmin.Views
             {
                 ThemeManager.Current.ChangeTheme(Application.Current, ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)));
                 GlobalVars.SettingsHelper.Theme = ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme;
-                //GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
+                GlobalVars.Loggi.Information($"Theme was changed from {ThemeManager.Current.GetInverseTheme(ThemeManager.Current.DetectTheme(Application.Current)).BaseColorScheme} to {ThemeManager.Current.DetectTheme(Application.Current).BaseColorScheme}");
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -261,11 +261,11 @@ namespace RunAsAdmin.Views
             {
                 ThemeManager.Current.ChangeThemeColorScheme(Application.Current, SwitchAccentComboBox.SelectedItem.ToString());
                 GlobalVars.SettingsHelper.Accent = SwitchAccentComboBox.SelectedItem.ToString();
-                //GlobalVars.Loggi.Information($"Accent was changed to {SwitchAccentComboBox.SelectedItem.ToString()}");
+                GlobalVars.Loggi.Information($"Accent was changed to {SwitchAccentComboBox.SelectedItem.ToString()}");
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -324,7 +324,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
             finally
             {
@@ -376,7 +376,7 @@ namespace RunAsAdmin.Views
                             }
                             catch (Win32Exception win32ex)
                             {
-                                //GlobalVars.Loggi.Error(win32ex, win32ex.Message);
+                                GlobalVars.Loggi.Error(win32ex, win32ex.Message);
                             }
                         });
                     }
@@ -384,7 +384,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         #endregion
@@ -398,7 +398,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -410,7 +410,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
 
@@ -422,7 +422,7 @@ namespace RunAsAdmin.Views
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         #endregion

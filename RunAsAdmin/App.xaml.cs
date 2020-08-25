@@ -114,7 +114,7 @@ namespace RunAsAdmin
                 }
                 catch (Exception ex)
                 {
-                    //GlobalVars.Loggi.Error(ex, ex.Message);
+                    GlobalVars.Loggi.Error(ex, ex.Message);
                 }
             });
         }
@@ -149,7 +149,7 @@ namespace RunAsAdmin
             }
             catch (Exception ex)
             {
-                //GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
     }

@@ -30,10 +30,10 @@ namespace RunAsAdmin.Views
             var list = new List<string>();
             try
             {
-                var files = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").Select(System.IO.Path.GetFileName).ToList();
-                foreach (var file in files)
+                var filePaths = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
+                foreach (var filePath in filePaths)
                 {
-                    list.Add(file);
+                    list.Add(filePath);
                 }
             }
             catch (Exception ex)
@@ -73,7 +73,7 @@ namespace RunAsAdmin.Views
         private List<LogModel> GetAll()
         {
             List<LogModel> list = new List<LogModel>().OrderBy(x => x._t.TimeOfDay).ToList();
-            string conString = $"Filename={GlobalVars.ProgramDataWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};Connection=shared";
+            string conString = $"Filename={GlobalVars.PublicDocumentsWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};ReadOnly=true";
             using var db = new LiteDatabase(conString);
             var Items = db.GetCollection<LogModel>("log");
             foreach (LogModel Item in Items.FindAll())
@@ -83,14 +83,12 @@ namespace RunAsAdmin.Views
             return list;
         }
 
-        // Does not work 
-        // TODO: finish the log viewer
         public void LoadLogData()
         {
             try
             {
                 // Load the simple logger view
-                LoggerDataGridView.ItemsSource = GetAll();
+                LoggerDataGridView.ItemsSource = new List<LogModel> { new LogModel() };
                 // All column headers are overwritten with the DisplayName value of the property
                 LogModel lm = new LogModel();
                 var props = lm.GetType().GetProperties();

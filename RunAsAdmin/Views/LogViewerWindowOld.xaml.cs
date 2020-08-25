@@ -56,7 +56,7 @@ namespace RunAsAdmin.Views
             var list = new List<string>();
             try
             {
-                var files = Directory.GetFiles(GlobalVars.ProgramDataWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
+                var files = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
                 foreach (var file in files)
                 {
                     list.Add(file);
@@ -73,7 +73,7 @@ namespace RunAsAdmin.Views
             var list = new List<string>();
             try
             {
-                var files = Directory.GetFiles(GlobalVars.ProgramDataWithAssemblyName, "Logger*.db").ToList();
+                var files = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").ToList();
                 foreach (var file in files)
                 {
                     list.Add(file);

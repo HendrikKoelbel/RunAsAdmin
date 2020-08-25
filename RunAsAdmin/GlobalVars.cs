@@ -31,12 +31,11 @@ namespace RunAsAdmin
         /// Returns the Users\Public\%AppName%\Logger_Year-Month-Day.db file path
         /// </summary>
         public static string LoggerPath => PublicDocumentsWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
-        // TODO: reactivate all GlobalVars.Loggi`s
-        //public static ILogger Loggi => new LoggerConfiguration()
-        //    .WriteTo.LiteDB(LoggerPath)
-        //    .CreateLogger();
+        public static ILogger Loggi => new LoggerConfiguration()
+            .WriteTo.LiteDB(LoggerPath)
+            .CreateLogger();
         #endregion
-        
+
         #region Settings
         /// <summary>
         /// Returns the Users\Public\%AppName%\Settings.json file path
