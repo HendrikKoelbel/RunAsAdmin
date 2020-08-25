@@ -23,7 +23,7 @@
         <ComboBox Grid.Row="0" Grid.Column="0" Margin="10 10 10 10" x:Name="SelectLogFileComboBox" SelectionChanged="SelectLogFileComboBox_SelectionChanged"></ComboBox>
         <Button Grid.Row="0" Grid.Column="1" Margin="10 10 10 10" x:Name="DeleteLogFileButton" Content="Delete" Click="DeleteLogFileButton_Click"></Button>
         <Button Grid.Row="0" Grid.Column="4" Margin="10 10 10 10" x:Name="RefreshButton" Content="Refresh" Click="RefreshButton_Click"></Button>
-        <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" IsReadOnly="True" ClipboardCopyMode="ExcludeHeader" AutoGenerateColumns="True" ColumnWidth="Auto">
+        <DataGrid x:Name="LoggerDataGridView" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" IsReadOnly="True" ClipboardCopyMode="ExcludeHeader" ColumnWidth="Auto" LoadingRow="LoggerDataGridView_LoadingRow">
         </DataGrid>
     </Grid>
 </Controls:MetroWindow>

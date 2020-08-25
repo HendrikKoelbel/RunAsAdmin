@@ -1,5 +1,6 @@
 ﻿using LiteDB;
 using MahApps.Metro.Controls;
+using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,8 +8,10 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace RunAsAdmin.Views
 {
@@ -24,40 +27,44 @@ namespace RunAsAdmin.Views
             InitializeComponent();
         }
 
+
+
         #region Logfile names and paths
         private static List<string> GetAllLogFileNames()
         {
             var list = new List<string>();
             try
             {
-                var filePaths = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
-                foreach (var filePath in filePaths)
+                var fileNames = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").Select(Path.GetFileName).ToList();
+                foreach (var fileName in fileNames)
                 {
-                    list.Add(filePath);
+                    list.Add(fileName);
                 }
+                return list;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
+                GlobalVars.Loggi.Error(ex, ex.Message);
+                return null;
             }
-            return list;
         }
         private static List<string> GetAllLogFilePaths()
         {
             var list = new List<string>();
             try
             {
-                var files = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").ToList();
-                foreach (var file in files)
+                var filePaths = Directory.GetFiles(GlobalVars.PublicDocumentsWithAssemblyName, "Logger*.db").ToList();
+                foreach (var filePath in filePaths)
                 {
-                    list.Add(file);
+                    list.Add(filePath);
                 }
+                return list;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
+                GlobalVars.Loggi.Error(ex, ex.Message);
+                return null;
             }
-            return list;
         }
         #endregion
 
@@ -70,25 +77,31 @@ namespace RunAsAdmin.Views
             LoadLogData();
         }
 
-        private List<LogModel> GetAll()
+        private async Task<List<LogModel>> GetLogDataAsync()
         {
-            List<LogModel> list = new List<LogModel>().OrderBy(x => x._t.TimeOfDay).ToList();
+            var logModels = new List<LogModel>();
             string conString = $"Filename={GlobalVars.PublicDocumentsWithAssemblyName}\\{SelectLogFileComboBox.SelectedItem};ReadOnly=true";
-            using var db = new LiteDatabase(conString);
-            var Items = db.GetCollection<LogModel>("log");
-            foreach (LogModel Item in Items.FindAll())
+            var result = await Task.Run(() =>
             {
-                list.Add(Item);
-            }
-            return list;
+                using var db = new LiteDatabase(conString);
+                var Items = db.GetCollection<LogModel>("log");
+                foreach (LogModel Item in Items.FindAll())
+                {
+                    logModels.Add(Item);
+                }
+                var sortedLogModels = logModels.OrderByDescending(d => d._t.TimeOfDay).ToList();
+                return sortedLogModels;
+            });
+            return result;
         }
 
-        public void LoadLogData()
+        public async void LoadLogData()
         {
             try
             {
-                // Load the simple logger view
-                LoggerDataGridView.ItemsSource = new List<LogModel> { new LogModel() };
+                Mouse.OverrideCursor = Cursors.Wait;
+                // Load the LogModel Data
+                LoggerDataGridView.ItemsSource = await GetLogDataAsync();
                 // All column headers are overwritten with the DisplayName value of the property
                 LogModel lm = new LogModel();
                 var props = lm.GetType().GetProperties();
@@ -96,33 +109,68 @@ namespace RunAsAdmin.Views
                 {
                     LoggerDataGridView.Columns[i].Header = props[i].GetCustomAttribute<DisplayNameAttribute>()?.DisplayName;
                 }
-                LoggerDataGridView.ItemsSource = GetAll();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
             }
         }
 
+        private void LoggerDataGridView_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            LogModel RowDataContaxt = e.Row.DataContext as LogModel;
+            if (RowDataContaxt != null)
+            {
+                e.Row.BorderThickness = new Thickness(10, 0, 0, 0);
+                switch (Enum.Parse(typeof(LogEventLevel), RowDataContaxt._l))
+                {
+                    case LogEventLevel.Verbose:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255));
+                        break;
+                    case LogEventLevel.Debug:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 255));
+                        break;
+                    case LogEventLevel.Information:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 255, 0));
+                        break;
+                    case LogEventLevel.Warning:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 0));
+                        break;
+                    case LogEventLevel.Error:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 0, 0));
+                        break;
+                    case LogEventLevel.Fatal:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 128, 0));
+                        break;
+                    default:
+                        e.Row.BorderBrush = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0));
+                        break;
+                }
+            }
+        }
 
         private void DeleteLogFileButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (SelectLogFileComboBox.SelectedItem != null && SelectLogFileComboBox.Items.Count > 1 && SelectLogFileComboBox.SelectedItem.ToString() != System.IO.Path.GetFileName(GlobalVars.LoggerPath))
+                if (SelectLogFileComboBox.SelectedItem != null && SelectLogFileComboBox.Items.Count > 1 && SelectLogFileComboBox.SelectedItem.ToString() != Path.GetFileName(GlobalVars.LoggerPath))
                 {
-                    var file = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).First();
+                    var file = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).FirstOrDefault();
                     if (File.Exists(file))
                     {
                         File.Delete(file);
-                        SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
-                        SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
                     }
+                    SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
+                    SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"{ex.GetType().Name}: {ex.Message} \n{ex.StackTrace}");
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         private void SelectLogFileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -135,25 +183,24 @@ namespace RunAsAdmin.Views
             LoadLogData();
         }
 
-
         public class LogModel
         {
-            [DisplayName("Log ID")]
-            public ObjectId _id { get; set; }
+            //[DisplayName("Log ID")]
+            //public ObjectId _id { get; set; }
             [DisplayName("Date and Time")]
             public DateTime _t { get; set; }
-            [DisplayName("Year")]
-            public int _ty { get; set; }
-            [DisplayName("Month")]
-            public int _tm { get; set; }
-            [DisplayName("Day")]
-            public int _td { get; set; }
-            [DisplayName("Week")]
-            public int _tw { get; set; }
-            [DisplayName("Message")]
-            public string _m { get; set; }
+            //[DisplayName("Year")]
+            //public int _ty { get; set; }
+            //[DisplayName("Month")]
+            //public int _tm { get; set; }
+            //[DisplayName("Day")]
+            //public int _td { get; set; }
+            //[DisplayName("Week")]
+            //public int _tw { get; set; }
             [DisplayName("Log Message")]
-            public string _mt { get; set; }
+            public string _m { get; set; }
+            //[DisplayName("Message")]
+            //public string _mt { get; set; }
             [DisplayName("ID")]
             public string _i { get; set; }
             [DisplayName("Log Level")]

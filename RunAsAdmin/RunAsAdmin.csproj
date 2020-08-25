@@ -275,9 +275,6 @@
     <Compile Include="Views\LogViewerWindow.xaml.cs">
       <DependentUpon>LogViewerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\LogViewerWindowOld.xaml.cs">
-      <DependentUpon>LogViewerWindowOld.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Views\SplashScreenWindow.xaml.cs">
       <DependentUpon>SplashScreenWindow.xaml</DependentUpon>
     </Compile>
@@ -285,10 +282,6 @@
       <DependentUpon>UpdateWindow.xaml</DependentUpon>
     </Compile>
     <Page Include="Views\LogViewerWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\LogViewerWindowOld.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
