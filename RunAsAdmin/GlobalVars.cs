@@ -32,7 +32,7 @@ namespace RunAsAdmin
         /// </summary>
         public static string LoggerPath => PublicDocumentsWithAssemblyName + "\\Logger_" + DateTime.Now.ToString("yyyy-MM-dd") + ".db";
         public static ILogger Loggi => new LoggerConfiguration()
-            .WriteTo.LiteDB(LoggerPath)
+            .WriteTo.LiteDB(LoggerPath, )
             .CreateLogger();
         #endregion
 
@@ -66,17 +66,13 @@ namespace RunAsAdmin
         #endregion
 
         #region Path and File List<>
-        public static List<string> ListOfAllPaths => new List<string>
+        public static List<string> ListOfPaths => new List<string>
         {
-            BasePath,
+            PublicDocumentsWithAssemblyName,
             TempPathWithAssemblyName,
-            AppDataRoaming,
-            AppDataLocal,
-            ProgramData,
         };
-        public static List<string> ListOfAllFiles => new List<string>
+        public static List<string> ListOfFiles => new List<string>
         {
-            ExecutablePath,
             LoggerPath,
             SettingsPath,
         };
@@ -99,10 +95,6 @@ namespace RunAsAdmin
         /// Returns the Users\Public\Documents\%AppName% Path
         /// </summary>
         public static string PublicDocumentsWithAssemblyName => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), Assembly.GetEntryAssembly().GetName().Name);
-        /// <summary>
-        /// Returns the ProgramData Path
-        /// </summary>
-        public static string ProgramDataWithAssemblyName => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Assembly.GetEntryAssembly().GetName().Name);
         /// <summary>
         /// Returns the local Temp path
         /// </summary>

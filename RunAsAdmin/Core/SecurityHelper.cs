@@ -14,15 +14,18 @@ namespace RunAsAdmin.Core
         {
             try
             {
+                if (string.IsNullOrEmpty(textToEncrypt))
+                    return null;
+
                 string ToReturn = "";
-                string _key = "Lf7Xw5g8GFczu$^&6bJfhfjXa6"; //default: "ay$a5%&jwrtmnh;lasjdf98787"
-                string _iv = "T4-+6t*C=-c7uP$2h?S^&PG"; //default: "abc@98797hjkas$&asd(*$%"
+                string _key = "Lf7Xw5g8GFczu$^&6bJfhfjXa6";
+                string _iv = "T4-+6t*C=-c7uP$2h?S^&PG";
                 byte[] _ivByte = { };
-                _ivByte = System.Text.Encoding.UTF8.GetBytes(_iv.Substring(0, 8));
+                _ivByte = Encoding.UTF8.GetBytes(_iv.Substring(0, 8));
                 byte[] _keybyte = { };
-                _keybyte = System.Text.Encoding.UTF8.GetBytes(_key.Substring(0, 8));
+                _keybyte = Encoding.UTF8.GetBytes(_key.Substring(0, 8));
                 MemoryStream ms = null; CryptoStream cs = null;
-                byte[] inputbyteArray = System.Text.Encoding.UTF8.GetBytes(textToEncrypt);
+                byte[] inputbyteArray = Encoding.UTF8.GetBytes(textToEncrypt);
                 using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
                 {
                     ms = new MemoryStream();
@@ -33,22 +36,26 @@ namespace RunAsAdmin.Core
                 }
                 return ToReturn;
             }
-            catch (Exception ae)
+            catch (Exception ex)
             {
-                throw new Exception(ae.Message, ae.InnerException);
+                GlobalVars.Loggi.Error(ex, ex.Message);
+                throw new Exception(ex.Message, ex.InnerException);
             }
         }
         public static string Decrypt(string textToDecrypt)
         {
             try
             {
+                if (string.IsNullOrEmpty(textToDecrypt))
+                    return null;
+
                 string ToReturn = "";
                 string _key = "Lf7Xw5g8GFczu$^&6bJfhfjXa6";
                 string _iv = "T4-+6t*C=-c7uP$2h?S^&PG";
                 byte[] _ivByte = { };
-                _ivByte = System.Text.Encoding.UTF8.GetBytes(_iv.Substring(0, 8));
+                _ivByte = Encoding.UTF8.GetBytes(_iv.Substring(0, 8));
                 byte[] _keybyte = { };
-                _keybyte = System.Text.Encoding.UTF8.GetBytes(_key.Substring(0, 8));
+                _keybyte = Encoding.UTF8.GetBytes(_key.Substring(0, 8));
                 MemoryStream ms = null; CryptoStream cs = null;
                 byte[] inputbyteArray = new byte[textToDecrypt.Replace(" ", "+").Length];
                 inputbyteArray = Convert.FromBase64String(textToDecrypt.Replace(" ", "+"));
@@ -63,9 +70,10 @@ namespace RunAsAdmin.Core
                 }
                 return ToReturn;
             }
-            catch (Exception ae)
+            catch (Exception ex)
             {
-                throw new Exception(ae.Message, ae.InnerException);
+                GlobalVars.Loggi.Error(ex, ex.Message);
+                throw new Exception(ex.Message, ex.InnerException);
             }
         }
     }

@@ -34,6 +34,7 @@ namespace RunAsAdmin
         // Example 2 
         private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
+            GlobalVars.Loggi.Error(e.Exception, e.Exception.Message);
             MessageBox.Show(e.Exception.Message);
             e.Handled = true;
         }
@@ -42,9 +43,11 @@ namespace RunAsAdmin
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             var exception = e.ExceptionObject as Exception;
+            GlobalVars.Loggi.Error(exception, exception.Message);
             MessageBox.Show(exception.Message);
             if (e.IsTerminating)
             {
+                GlobalVars.Loggi.Fatal(exception, exception.Message);
                 MessageBox.Show(exception.Message);
                 //Now is a good time to write that critical error file!
             }
@@ -53,6 +56,7 @@ namespace RunAsAdmin
         // Example 4 
         private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
+            GlobalVars.Loggi.Error(e.Exception, e.Exception.Message);
             MessageBox.Show(e.Exception.Message);
             e.SetObserved();
         }
@@ -60,6 +64,7 @@ namespace RunAsAdmin
         // Example 5 
         private void WinFormApplication_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
+            GlobalVars.Loggi.Error(e.Exception, e.Exception.Message);
             MessageBox.Show(e.Exception.Message);
         }
         #endregion
@@ -72,7 +77,8 @@ namespace RunAsAdmin
             var splashScreen = new SplashScreenWindow();
             this.MainWindow = splashScreen;
             splashScreen.Show();
-
+            splashScreen.SplashScreenInfoLabel.Content = "Loading Application...";
+            InitializeIOFolders();
             InitializeStyle();
 
             //In order to ensure the UI stays responsive, we need to
@@ -81,24 +87,18 @@ namespace RunAsAdmin
             {
                 try
                 {
-                    ////we need to do the work in batches so that we can report progress
-                    //for (int i = 1; i <= 100; i++)
-                    //{
+                    //we need to do the work in batches so that we can report progress
+                    for (int i = 1; i <= 100; i++)
+                    {
 
-                    Thread.Sleep(50);
+                        //Simulate a part of work being done
+                        Thread.Sleep(10);
 
-                    splashScreen.SplashScreenInfoLabel.Dispatcher.Invoke(() => splashScreen.SplashScreenInfoLabel.Content = "Loading Style...");
+                        //Because we're not on the UI thread, we need to use the Dispatcher
+                        //Associated with the splash screen to update the progress bar
+                        splashScreen.SplashScreenProgressBar.Dispatcher.Invoke(() => splashScreen.SplashScreenProgressBar.IsIndeterminate = true);
 
-                    Thread.Sleep(50);
-
-                    ////Simulate a part of work being done
-                    //Thread.Sleep(10);
-
-                    ////Because we're not on the UI thread, we need to use the Dispatcher
-                    ////Associated with the splash screen to update the progress bar
-                    //splashScreen.SplashScreenProgressBar.Dispatcher.Invoke(() => splashScreen.SplashScreenProgressBar.IsIndeterminate = true);
-
-                    //}
+                    }
 
                     //Once we're done we need to use the Dispatcher
                     //to create and show the MainWindow
@@ -144,6 +144,25 @@ namespace RunAsAdmin
                     {
                         if (Enum.TryParse(GlobalVars.SettingsHelper.Accent, out GlobalVars.Accents AccentResult))
                             ThemeManager.Current.ChangeThemeColorScheme(Application.Current, AccentResult.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
+            }
+        }
+        public void InitializeIOFolders()
+        {
+            try
+            {
+                foreach (var Path in GlobalVars.ListOfPaths)
+                {
+                    if (!Directory.Exists(Path))
+                    {
+                        Directory.CreateDirectory(Path);
+                        if (Directory.Exists(GlobalVars.PublicDocumentsWithAssemblyName))
+                            GlobalVars.Loggi.Debug("Folder was not found and created:\n{0}", Path);
                     }
                 }
             }
