@@ -109,6 +109,7 @@ namespace RunAsAdmin
                         var mainWindow = new MainWindow();
                         this.MainWindow = mainWindow;
                         mainWindow.Show();
+                        mainWindow.Activate();
                         splashScreen.Close();
                     });
                 }
