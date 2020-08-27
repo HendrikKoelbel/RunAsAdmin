@@ -1,5 +1,4 @@
 ﻿using MahApps.Metro.Controls;
-using MahApps.Metro.Controls.Dialogs;
 using Onova;
 using Onova.Services;
 using System;
@@ -15,8 +14,7 @@ namespace RunAsAdmin.Views
     public partial class UpdateWindow : MetroWindow
     {
         #region Private variables
-        private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        private readonly CancellationTokenSource UpdateCts = cancellationTokenSource;
+        private readonly CancellationTokenSource UpdateCts = new CancellationTokenSource();
         private readonly UpdateManager Manager;
         #endregion
 
@@ -63,6 +61,9 @@ namespace RunAsAdmin.Views
                 {
                     this.Close();
                 }
+            }catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
         #endregion
@@ -79,7 +80,14 @@ namespace RunAsAdmin.Views
         #region Button click event with cancellation
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
-            UpdateCts.Cancel();
+            try
+            {
+                UpdateCts.Cancel();
+            }
+            catch (Exception)
+            {
+                GlobalVars.Loggi.Information("The update was cancelled.");
+            }
         }
         #endregion
     }
