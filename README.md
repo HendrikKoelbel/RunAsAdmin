@@ -23,6 +23,8 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 * [MahApps.Metro](https://github.com/MahApps/MahApps.Metro) - A toolkit for creating modern WPF applications
 * [Resource-Embedder](https://github.com/MarcStan/resource-embedder) - Automatically embeds satellite assemblies into the main assembly
 * [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) - Popular high-performance JSON framework for .NET
+* [Serilog](https://github.com/serilog/serilog) - Simple .NET logging with fully-structured events
+* [LiteDB](https://github.com/mbdavid/litedb) - A .NET NoSQL Document Store in a single data file
 
 ## Versioning
 
