@@ -19,19 +19,9 @@
             <Controls:Badged x:Name="UpdateBadge" BadgePlacementMode="BottomRight">
                 <Button x:Name="UpdateButton" Content="Update" Click="UpdateButton_Click"/>
             </Controls:Badged>
-            <ToggleButton x:Name="SettingsButton" Content="Settings" IsChecked="{Binding ElementName=switchThemeFlyout, Path=IsOpen}"/>
+            <ToggleButton x:Name="SettingsButton" Content="Settings" Click="SettingsButton_OnClick"/>
         </Controls:WindowCommands>
     </Controls:MetroWindow.RightWindowCommands>
-    <Controls:MetroWindow.Flyouts>
-        <Controls:FlyoutsControl>
-            <Controls:Flyout x:Name="switchThemeFlyout" Header="Themesettings" Position="Right" Width="250">
-                <StackPanel HorizontalAlignment="Stretch">
-                    <Controls:ToggleSwitch x:Name="SwitchThemeToggle" Toggled="SwitchThemeToggle_Toggled" HorizontalAlignment="Center" Header="Switch Theme" OnContent="Dark" OffContent="Light" Margin="20 5 20 5"/>
-                    <ComboBox x:Name="SwitchAccentComboBox" SelectionChanged="SwitchAccentComboBox_SelectionChanged" Height="30"  Margin="20 5 20 5" />
-                </StackPanel>
-            </Controls:Flyout>
-        </Controls:FlyoutsControl>
-    </Controls:MetroWindow.Flyouts>
     <Controls:MetroWindow.ContextMenu>
         <ContextMenu>
             <MenuItem Header="View Log" x:Name="ViewLogMenuItem" MenuItem.Click="ViewLogMenuItem_Click"/>
