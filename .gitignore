@@ -338,3 +338,5 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+RunAsAdmin_Debug.zip
+RunAsAdmin_Release.zip
