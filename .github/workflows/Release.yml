@@ -40,7 +40,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: ${{ github.workspace }}RunAsAdmin.zip
+          files: ${{ github.workspace }}\RunAsAdmin.zip
           # note you'll typically need to create a personal access token
           # with permissions to create releases in the other repo
           token: ${{ secrets.RUNASADMIN_RELEASETOKEN }}
