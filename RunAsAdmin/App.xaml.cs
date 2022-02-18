@@ -69,7 +69,7 @@ namespace RunAsAdmin
         }
         #endregion
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
@@ -78,12 +78,12 @@ namespace RunAsAdmin
             this.MainWindow = splashScreen;
             splashScreen.Show();
             splashScreen.SplashScreenInfoLabel.Content = "Loading Application...";
-            InitializeIOFolders();
-            InitializeStyle();
+            await InitializeIOFolders();
+            InitializeStyleAsync();
 
             //In order to ensure the UI stays responsive, we need to
             //Do the work on a different thread
-            Task.Factory.StartNew(() =>
+            await Task.Factory.StartNew(() =>
             {
                 try
                 {
@@ -120,7 +120,7 @@ namespace RunAsAdmin
             });
         }
 
-        public static void InitializeStyle()
+        public static void InitializeStyleAsync()
         {
             try
             {
@@ -132,19 +132,23 @@ namespace RunAsAdmin
                             switch (ThemesResult)
                             {
                                 case GlobalVars.Themes.Dark:
-                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorDark);
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current,
+                                        ThemeManager.BaseColorDark);
                                     break;
                                 case GlobalVars.Themes.Light:
-                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current, ThemeManager.BaseColorLight);
+                                    ThemeManager.Current.ChangeThemeBaseColor(Application.Current,
+                                        ThemeManager.BaseColorLight);
                                     break;
                                 default:
                                     break;
                             }
                     }
+
                     if (!string.IsNullOrEmpty(GlobalVars.SettingsHelper.Accent))
                     {
                         if (Enum.TryParse(GlobalVars.SettingsHelper.Accent, out GlobalVars.Accents AccentResult))
-                            ThemeManager.Current.ChangeThemeColorScheme(Application.Current, AccentResult.ToString());
+                            ThemeManager.Current.ChangeThemeColorScheme(Application.Current,
+                                AccentResult.ToString());
                     }
                 }
             }
@@ -153,19 +157,22 @@ namespace RunAsAdmin
                 GlobalVars.Loggi.Error(ex, ex.Message);
             }
         }
-        public void InitializeIOFolders()
+        public async Task InitializeIOFolders()
         {
             try
             {
-                foreach (var Path in GlobalVars.ListOfPaths)
+                await Task.Run(() =>
                 {
-                    if (!Directory.Exists(Path))
+                    foreach (var Path in GlobalVars.ListOfPaths)
                     {
-                        Directory.CreateDirectory(Path);
-                        if (Directory.Exists(GlobalVars.PublicDocumentsWithAssemblyName))
-                            GlobalVars.Loggi.Debug("Folder was not found and created:\n{0}", Path);
+                        if (!Directory.Exists(Path))
+                        {
+                            Directory.CreateDirectory(Path);
+                            if (Directory.Exists(GlobalVars.PublicDocumentsWithAssemblyName))
+                                GlobalVars.Loggi.Debug("Folder was not found and created:\n{0}", Path);
+                        }
                     }
-                }
+                });
             }
             catch (Exception ex)
             {

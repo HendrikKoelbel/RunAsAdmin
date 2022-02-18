@@ -167,10 +167,10 @@ namespace RunAsAdmin.Views
             {
                 if (SelectLogFileComboBox.SelectedItem != null && SelectLogFileComboBox.Items.Count > 1 && SelectLogFileComboBox.SelectedItem.ToString() != Path.GetFileName(GlobalVars.LoggerPath))
                 {
-                    var file = GetAllLogFilePaths().Where(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString())).FirstOrDefault();
+                    var file = GetAllLogFilePaths().FirstOrDefault(s => s.Contains(SelectLogFileComboBox.SelectedItem.ToString()));
                     if (File.Exists(file))
                     {
-                        File.Delete(file);
+                        if (file != null) File.Delete(file);
                     }
                     SelectLogFileComboBox.SelectedItem = Path.GetFileName(GlobalVars.LoggerPath);
                     SelectLogFileComboBox.ItemsSource = GetAllLogFileNames();
