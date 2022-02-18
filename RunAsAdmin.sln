@@ -8,7 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AFBAC3CF-927E-4860-89EC-9B4353607C46}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
-		RunAsAdmin.exe = RunAsAdmin.exe
 	EndProjectSection
 EndProject
 Global

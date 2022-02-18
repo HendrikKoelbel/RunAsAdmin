@@ -380,8 +380,7 @@
 del "$(ProjectDir)\$(OutDir)*.exe.config"
 del "$(ProjectDir)\$(OutDir)*.dll.config"
 if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)\$(ProjectName)_Debug.zip' -Force)
-if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)\$(ProjectName)_Release.zip' -Force)
-if $(ConfigurationName) == Release (powershell.exe Copy-Item -Path $(TargetPath) -Destination $(SolutionDir))</PostBuildEvent>
+if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)\$(ProjectName).zip' -Force)</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.2.4\build\Fody.targets" Condition="Exists('..\packages\Fody.6.2.4\build\Fody.targets')" />
 </Project>
