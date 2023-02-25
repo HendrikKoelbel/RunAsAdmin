@@ -15,8 +15,6 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 - Supporting: .NET 6
 - OS: windows
 
-OS	Installers	Binaries
-Windows	| Arm64 | x64 | x86 | winget instructions
 
 | OS |  Installers
 |----|:-----------:
