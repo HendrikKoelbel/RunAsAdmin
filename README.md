@@ -15,6 +15,15 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 - Supporting: .NET 6
 - OS: windows
 
+OS	Installers	Binaries
+Windows	| Arm64 | x64 | x86 | winget instructions
+
+| OS |  Installers
+|----|:-----------:
+| Windows: |  Arm64 | x64 | x86
+| Links: |  [Arm64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-arm64-installer) | [x64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-x64-installer) | [x86](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-x86-installer)
+
+
 ## Built With
 
 * [UACHelper](https://github.com/falahati/UACHelper) - A helper class library to detect, manage and use UAC functionalities in your program
