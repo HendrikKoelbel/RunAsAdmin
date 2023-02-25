@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading.Tasks;
@@ -10,11 +11,11 @@ namespace RunAsAdmin.Core
 {
     public static class FileHelper
     {
-        public static bool HasFileRights(string filePath, FileSystemRights fileRights, string winUserString = null, WindowsIdentity winUser = null)
+		public static bool HasFileRights(string filePath, FileSystemRights fileRights, string winUserString = null, WindowsIdentity winUser = null)
         {
             try
             {
-                var security = Directory.GetAccessControl(filePath);
+                var security = new DirectoryInfo(filePath).GetAccessControl();
                 var rules = security.GetAccessRules(true, true, typeof(SecurityIdentifier));
 
                 if (winUserString != null)
@@ -36,14 +37,13 @@ namespace RunAsAdmin.Core
             }
         }
 
-        // Adds an ACL entry on the specified file for the specified account.
-        public static void AddFileSecurity(string filePath, string winUserString = null, WindowsIdentity winUser = null,
+		// Adds an ACL entry on the specified file for the specified account.
+		public static void AddFileSecurity(string filePath, string winUserString = null, WindowsIdentity winUser = null,
             FileSystemRights rights = FileSystemRights.FullControl, AccessControlType controlType = AccessControlType.Allow)
         {
             // Get a FileSecurity object that represents the
             // current security settings.
-            FileSecurity fSecurity = File.GetAccessControl(filePath);
-
+            FileSecurity fSecurity = new FileInfo(filePath).GetAccessControl();
             if (winUserString != null)
             {
                 // Add the FileSystemAccessRule to the security settings.
@@ -56,9 +56,9 @@ namespace RunAsAdmin.Core
                 fSecurity.AddAccessRule(new FileSystemAccessRule(winUser.User.Value,
                     rights, controlType));
             }
-
+            FileInfo file = new FileInfo(filePath);
             // Set the new access settings.
-            File.SetAccessControl(filePath, fSecurity);
+            file.SetAccessControl(fSecurity);
         }
 
         // Removes an ACL entry on the specified file for the specified account.
@@ -67,7 +67,7 @@ namespace RunAsAdmin.Core
         {
             // Get a FileSecurity object that represents the
             // current security settings.
-            FileSecurity fSecurity = File.GetAccessControl(filePath);
+            FileSecurity fSecurity = new FileInfo(filePath).GetAccessControl();
 
             if (winUserString != null)
             {
@@ -82,8 +82,9 @@ namespace RunAsAdmin.Core
                     rights, controlType));
             }
 
-            // Set the new access settings.
-            File.SetAccessControl(filePath, fSecurity);
+			FileInfo file = new FileInfo(filePath);
+			// Set the new access settings.
+			file.SetAccessControl(fSecurity);
         }
     }
 }

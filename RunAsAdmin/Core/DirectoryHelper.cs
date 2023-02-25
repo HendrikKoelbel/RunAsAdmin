@@ -11,32 +11,34 @@ namespace RunAsAdmin.Core
 {
     public static class DirectoryHelper
     {
-        public static bool HasDirectoryRights(string directoryPath, FileSystemRights rights, string winUserString = null, WindowsIdentity winUser = null)
-        {
-            try
-            {
-                var security = Directory.GetAccessControl(directoryPath);
-                var rules = security.GetAccessRules(true, true, typeof(SecurityIdentifier));
+		public static bool HasDirectoryRights(string directoryPath, FileSystemRights rights, string winUserString = null, WindowsIdentity winUser = null)
+		{
+			try
+			{
+                var ds = new DirectorySecurity();
+                DirectoryInfo dirInfo = new DirectoryInfo(directoryPath);
+                ds = FileSystemAclExtensions.GetAccessControl(dirInfo);
+				var rules = ds.GetAccessRules(true, true, typeof(SecurityIdentifier));
 
-                if (winUserString != null)
-                {
-                    return rules.OfType<FileSystemAccessRule>().Any(r =>
-                         ((int)r.FileSystemRights & (int)rights) != 0 && r.IdentityReference.Value == winUserString);
-                }
-                else if (winUser != null)
-                {
-                    return rules.OfType<FileSystemAccessRule>().Any(r =>
-                         ((int)r.FileSystemRights & (int)rights) != 0 && r.IdentityReference.Value == winUser.User.Value);
-                }
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
+				if (winUserString != null)
+				{
+					return rules.OfType<FileSystemAccessRule>().Any(r =>
+						 ((int)r.FileSystemRights & (int)rights) != 0 && r.IdentityReference.Value == winUserString);
+				}
+				else if (winUser != null)
+				{
+					return rules.OfType<FileSystemAccessRule>().Any(r =>
+						 ((int)r.FileSystemRights & (int)rights) != 0 && r.IdentityReference.Value == winUser.User.Value);
+				}
+				return false;
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
 
-        public static void AddDirectorySecurity(string directoryPath, string winUserString = null, WindowsIdentity winUser = null,
+		public static void AddDirectorySecurity(string directoryPath, string winUserString = null, WindowsIdentity winUser = null,
             FileSystemRights rights = FileSystemRights.FullControl, InheritanceFlags inheritanceFlags = InheritanceFlags.ObjectInherit, PropagationFlags propagationFlags = PropagationFlags.None, AccessControlType controlType = AccessControlType.Allow)
         {
             try

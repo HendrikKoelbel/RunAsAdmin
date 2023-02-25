@@ -14,7 +14,6 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web.Configuration;
 using System.Windows.Forms;
 
 namespace RunAsAdmin.Core

@@ -44,33 +44,33 @@ namespace RunAsAdmin.Core
         }
         public static string Decrypt(string textToDecrypt)
         {
-            try
-            {
-                if (string.IsNullOrEmpty(textToDecrypt))
-                    return null;
+			try
+			{
+				if (string.IsNullOrEmpty(textToDecrypt))
+					return null;
 
-                string ToReturn = "";
-                string _key = "Lf7Xw5g8GFczu$^&6bJfhfjXa6";
-                string _iv = "T4-+6t*C=-c7uP$2h?S^&PG";
-                byte[] _ivByte = { };
-                _ivByte = Encoding.UTF8.GetBytes(_iv.Substring(0, 8));
-                byte[] _keybyte = { };
-                _keybyte = Encoding.UTF8.GetBytes(_key.Substring(0, 8));
-                MemoryStream ms = null; CryptoStream cs = null;
-                byte[] inputbyteArray = new byte[textToDecrypt.Replace(" ", "+").Length];
-                inputbyteArray = Convert.FromBase64String(textToDecrypt.Replace(" ", "+"));
-                using (DESCryptoServiceProvider des = new DESCryptoServiceProvider())
-                {
-                    ms = new MemoryStream();
-                    cs = new CryptoStream(ms, des.CreateDecryptor(_keybyte, _ivByte), CryptoStreamMode.Write);
-                    cs.Write(inputbyteArray, 0, inputbyteArray.Length);
-                    cs.FlushFinalBlock();
-                    Encoding encoding = Encoding.UTF8;
-                    ToReturn = encoding.GetString(ms.ToArray());
-                }
-                return ToReturn;
-            }
-            catch (Exception ex)
+				string ToReturn = "";
+				string _key = "Lf7Xw5g8GFczu$^&6bJfhfjXa6";
+				string _iv = "T4-+6t*C=-c7uP$2h?S^&PG";
+				byte[] _ivByte = Encoding.UTF8.GetBytes(_iv.Substring(0, 16));
+				byte[] _keybyte = Encoding.UTF8.GetBytes(_key.Substring(0, 16));
+				MemoryStream ms = null;
+				CryptoStream cs = null;
+				byte[] inputbyteArray = Convert.FromBase64String(textToDecrypt.Replace(" ", "+"));
+				using (Aes aesAlg = Aes.Create())
+				{
+					aesAlg.Key = _keybyte;
+					aesAlg.IV = _ivByte;
+					ms = new MemoryStream();
+					cs = new CryptoStream(ms, aesAlg.CreateDecryptor(), CryptoStreamMode.Write);
+					cs.Write(inputbyteArray, 0, inputbyteArray.Length);
+					cs.FlushFinalBlock();
+					Encoding encoding = Encoding.UTF8;
+					ToReturn = encoding.GetString(ms.ToArray());
+				}
+				return ToReturn;
+			}
+			catch (Exception ex)
             {
                 GlobalVars.Loggi.Error(ex, ex.Message);
                 throw new Exception(ex.Message, ex.InnerException);
