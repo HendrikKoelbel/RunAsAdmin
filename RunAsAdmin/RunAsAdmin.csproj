@@ -102,7 +102,7 @@
     <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.410601">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Costura.Fody" Version="5.7.0" />
+    <PackageReference Include="Costura.Fody" Version="5.7.0" PrivateAssets="All"/>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="7.0.0" />
   </ItemGroup>
   <PropertyGroup>
@@ -110,10 +110,10 @@
     <BaseOutputPath>C:\Users\HKOELBEL\source\repos\RunAsAdmin\RunAsAdmin\bin</BaseOutputPath>
     <BaseIntermediateOutputPath>C:\Users\HKOELBEL\source\repos\RunAsAdmin\RunAsAdmin\obj</BaseIntermediateOutputPath>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <SignAssembly>False</SignAssembly>
+    <Authors></Authors>
+    <Product></Product>
   </PropertyGroup>
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="del &quot;$(ProjectDir)\$(OutDir)*.xml&quot;, &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.exe.config&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.dll.config&quot;&#xD;&#xA;if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)$(MSBuildProjectName)_Debug.zip' -Force)&#xD;&#xA;if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)$(MSBuildProjectName).zip' -Force)" />
   </Target>
