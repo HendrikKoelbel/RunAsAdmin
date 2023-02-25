@@ -12,7 +12,8 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 
 ### Prerequisites
 
-- Supporting .NET Framework (4.7+)
+- Supporting: .NET 6
+- OS: windows
 
 ## Built With
 
@@ -33,7 +34,6 @@ For the versions available, see the [tags on this repository](https://github.com
 ## Authors
 
 * **Hendrik Koelbel** - *Initial work* - [HendrikKoelbel](https://github.com/HendrikKoelbel)
-* **HenkLab** - *Collaboration* - [HenkLab](https://github.com/HenkLab)
 
 See also the list of [contributors](https://github.com/HendrikKoelbel/RunAsAdmin/contributors) who participated in this project.
 
