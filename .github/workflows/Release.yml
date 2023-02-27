@@ -12,16 +12,16 @@ jobs:
        contents: write
     
     steps:      
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       
       - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1
+        uses: microsoft/setup-msbuild@v1.3.1
 
       - name: Setup NuGet
-        uses: NuGet/setup-nuget@v1.0.5
+        uses: NuGet/setup-nuget@v1.1.1
         
       - name: Setup VSTest
-        uses: darenm/Setup-VSTest@v1
+        uses: darenm/Setup-VSTest@v1.2
 
       - name: Navigate to Workspace
         run: cd $GITHUB_WORKSPACE
