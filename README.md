@@ -1,8 +1,6 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/HendrikKoelbel/RunAsAdmin)
 ![GitHub Releases](https://img.shields.io/github/downloads/HendrikKoelbel/RunAsAdmin/latest/total)
 
-> **Attention**: This project is a refactoring of the previously created RunAsAdmin tools. Outdated version [here](https://github.com/HendrikKoelbel/RunAsAdmin_Outdated)!
-
 # Run as Admin
 
 RunAsAdmin is a small program that allows administrators to start other programs with elevated privileges when logged in as a normal user.
