@@ -360,8 +360,23 @@ namespace RunAsAdmin.Views
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Application.Current.Shutdown();
-            Process.GetCurrentProcess().Kill();
+            try
+            {
+                // Cancel the update check task
+                UpdateCheckCts?.Cancel();
+
+                // Log the shutdown
+                GlobalVars.Loggi.Information("Application is shutting down gracefully");
+
+                // Perform graceful shutdown
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "Error during application shutdown");
+                // Only in case of error, force termination
+                Environment.Exit(1);
+            }
         }
     }
 }

@@ -10,14 +10,14 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 
 ### Prerequisites
 
-- Supporting: .NET 6
-- OS: windows
+- Supporting: .NET 8.0 LTS
+- OS: Windows
 
 
 | OS |  Installers
 |----|:-----------:
 | Windows: |  Arm64 | x64 | x86
-| Links: |  [Arm64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-arm64-installer) | [x64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-x64-installer) | [x86](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.14-windows-x86-installer)
+| Links: |  [Arm64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-arm64-installer) | [x64](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-x64-installer) | [x86](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-x86-installer)
 
 
 ## Built With

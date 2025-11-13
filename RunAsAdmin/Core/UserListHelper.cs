@@ -11,22 +11,46 @@ namespace RunAsAdmin.Core
         public static List<string> GetADUsers()
         {
             var ADUsers = new List<string>();
-
-            using var forest = Forest.GetCurrentForest();
-            foreach (Domain domain in forest.Domains)
+            try
             {
-                using (var context = new PrincipalContext(ContextType.Domain, domain.Name))
+                using var forest = Forest.GetCurrentForest();
+                foreach (Domain domain in forest.Domains)
                 {
-                    using var searcher = new PrincipalSearcher(new UserPrincipal(context));
-                    foreach (var result in searcher.FindAll())
+                    using (var context = new PrincipalContext(ContextType.Domain, domain.Name))
                     {
-                        DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
-                        ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
+                        using var searcher = new PrincipalSearcher(new UserPrincipal(context));
+                        foreach (var result in searcher.FindAll())
+                        {
+                            using (result)
+                            {
+                                DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
+                                if (de?.Properties["samAccountName"]?.Value != null)
+                                {
+                                    ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
+                                }
+                            }
+                        }
                     }
+                    domain.Dispose();
                 }
-                domain.Dispose();
+                GlobalVars.Loggi.Debug("UserListHelper: Successfully retrieved {Count} AD users", ADUsers.Count);
+                return ADUsers;
             }
-            return ADUsers;
+            catch (ActiveDirectoryObjectNotFoundException adEx)
+            {
+                GlobalVars.Loggi.Warning(adEx, "UserListHelper: Active Directory not available");
+                return ADUsers;
+            }
+            catch (PrincipalServerDownException psEx)
+            {
+                GlobalVars.Loggi.Warning(psEx, "UserListHelper: Domain controller is not available");
+                return ADUsers;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "UserListHelper: Error retrieving AD users");
+                return ADUsers;
+            }
         }
 
         private const int UF_ACCOUNTDISABLE = 0x0002;
@@ -60,18 +84,29 @@ namespace RunAsAdmin.Core
             var allUsers = new List<string>();
             try
             {
-                foreach (var user in GetLocalUsers())
+                var localUsers = GetLocalUsers();
+                foreach (var user in localUsers)
                 {
                     allUsers.Add(user);
                 }
-                foreach (var user in GetADUsers())
+
+                var adUsers = GetADUsers();
+                foreach (var user in adUsers)
                 {
-                    allUsers.Add(user);
+                    // Avoid duplicates
+                    if (!allUsers.Contains(user))
+                    {
+                        allUsers.Add(user);
+                    }
                 }
+
+                GlobalVars.Loggi.Debug("UserListHelper: Successfully retrieved {Count} total users ({LocalCount} local, {ADCount} AD)",
+                    allUsers.Count, localUsers.Count, adUsers.Count);
                 return allUsers;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                GlobalVars.Loggi.Error(ex, "UserListHelper: Error retrieving all users");
                 return allUsers;
             }
         }
