@@ -2,8 +2,14 @@ name: Build and Release
 
 on:
   push:
-    tags:        
+    tags:
       - v*  # Push events to v1.0, v1.1, and v1.9 tags
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      version:
+        description: 'Version to release (e.g., 2.0.3)'
+        required: true
+        default: '2.0.3'
 
 jobs:  
   build:    
@@ -32,18 +38,34 @@ jobs:
       - name: Build Solution
         run: |
           msbuild.exe RunAsAdmin.sln /p:platform="Any CPU" /p:configuration="Release"
-        
+
       #- name: Run Tests
       #  run: vstest.console.exe .\RunAsAdmin.Tests\bin\Release\RunAsAdmin.Tests.dll
-      
+
+      - name: Determine Version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "v${{ github.event.inputs.version }}"
+            echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+            echo "TAG_NAME=$version" >> $env:GITHUB_OUTPUT
+          } else {
+            $version = "${{ github.ref_name }}"
+            echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+            echo "TAG_NAME=$version" >> $env:GITHUB_OUTPUT
+          }
+          echo "Release version: $version"
+
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ steps.version.outputs.TAG_NAME }}
+          name: Release ${{ steps.version.outputs.VERSION }}
           body_path: ${{ github.workspace }}\CHANGELOG.md
           files: ${{ github.workspace }}\RunAsAdmin.zip
-          # note you'll typically need to create a personal access token
-          # with permissions to create releases in the other repo
+          draft: false
+          prerelease: false
           token: ${{ secrets.RUNASADMIN_RELEASETOKEN }}
         env:
           GITHUB_REPOSITORY: HendrikKoelbel/RunAsAdmin
