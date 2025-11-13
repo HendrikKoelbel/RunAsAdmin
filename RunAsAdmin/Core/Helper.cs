@@ -25,22 +25,36 @@ namespace RunAsAdmin.Core
         {
             try
             {
-                if (stringArray != null)
+                if (comboBox == null)
+                {
+                    GlobalVars.Loggi.Error("SetDataSource called with null comboBox");
+                    throw new ArgumentNullException(nameof(comboBox));
+                }
+
+                if (stringArray != null && stringArray.Length > 0)
                 {
                     Array.Sort(stringArray);
                     AutoCompleteStringCollection col = new AutoCompleteStringCollection();
                     foreach (var item in stringArray)
                     {
-                        col.Add(item);
+                        if (!string.IsNullOrWhiteSpace(item))
+                        {
+                            col.Add(item);
+                        }
                     }
                     comboBox.ItemsSource = col;
+                    GlobalVars.Loggi.Debug("Successfully set data source with {Count} items", col.Count);
                 }
                 else
                 {
+                    GlobalVars.Loggi.Warning("SetDataSource called with null or empty stringArray");
+                    comboBox.ItemsSource = null;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                GlobalVars.Loggi.Error(ex, "Error setting data source for comboBox");
+                throw;
             }
         }
         #endregion
@@ -58,10 +72,17 @@ namespace RunAsAdmin.Core
                     domainList.Add(domain.Name);
                     domain.Dispose();
                 }
+                GlobalVars.Loggi.Debug("Successfully retrieved {Count} domains", domainList.Count);
                 return domainList;
             }
-            catch
+            catch (ActiveDirectoryObjectNotFoundException adEx)
             {
+                GlobalVars.Loggi.Warning(adEx, "Active Directory not available, returning only local machine");
+                return domainList;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "Error retrieving domain list, returning only local machine");
                 return domainList;
             }
         }
@@ -85,11 +106,19 @@ namespace RunAsAdmin.Core
                             users.Add(childEntry.Name); // add active user to list
                         }
                     }
+                    childEntry.Dispose(); // Dispose each child entry
                 }
+                GlobalVars.Loggi.Debug("Successfully retrieved {Count} local users", users.Count);
                 return users;
             }
-            catch (Exception)
+            catch (UnauthorizedAccessException uaEx)
             {
+                GlobalVars.Loggi.Warning(uaEx, "Access denied when retrieving local users");
+                return users;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "Error retrieving local users");
                 return users;
             }
         }
@@ -109,16 +138,34 @@ namespace RunAsAdmin.Core
                         using var searcher = new PrincipalSearcher(new UserPrincipal(context));
                         foreach (var result in searcher.FindAll())
                         {
-                            DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
-                            ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
+                            using (result)
+                            {
+                                DirectoryEntry de = result.GetUnderlyingObject() as DirectoryEntry;
+                                if (de?.Properties["samAccountName"]?.Value != null)
+                                {
+                                    ADUsers.Add(de.Properties["samAccountName"].Value.ToString());
+                                }
+                            }
                         }
                     }
                     domain.Dispose();
                 }
+                GlobalVars.Loggi.Debug("Successfully retrieved {Count} AD users", ADUsers.Count);
                 return ADUsers;
             }
-            catch (Exception)
+            catch (ActiveDirectoryObjectNotFoundException adEx)
             {
+                GlobalVars.Loggi.Warning(adEx, "Active Directory not available");
+                return ADUsers;
+            }
+            catch (PrincipalServerDownException psEx)
+            {
+                GlobalVars.Loggi.Warning(psEx, "Domain controller is not available");
+                return ADUsers;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "Error retrieving AD users");
                 return ADUsers;
             }
         }
@@ -130,18 +177,29 @@ namespace RunAsAdmin.Core
             var allUsers = new List<string>();
             try
             {
-                foreach (var user in GetLocalUsers())
+                var localUsers = GetLocalUsers();
+                foreach (var user in localUsers)
                 {
                     allUsers.Add(user);
                 }
-                foreach (var user in GetADUsers())
+
+                var adUsers = GetADUsers();
+                foreach (var user in adUsers)
                 {
-                    allUsers.Add(user);
+                    // Avoid duplicates
+                    if (!allUsers.Contains(user))
+                    {
+                        allUsers.Add(user);
+                    }
                 }
+
+                GlobalVars.Loggi.Debug("Successfully retrieved {Count} total users ({LocalCount} local, {ADCount} AD)",
+                    allUsers.Count, localUsers.Count, adUsers.Count);
                 return allUsers;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                GlobalVars.Loggi.Error(ex, "Error retrieving all users");
                 return allUsers;
             }
         }
@@ -162,21 +220,33 @@ namespace RunAsAdmin.Core
             try
             {
                 // create your domain context
-                PrincipalContext ctx = new PrincipalContext(ContextType.Domain);
-                // find the user
-                UserPrincipal user = UserPrincipal.FindByIdentity(ctx, WindowsIdentity.GetCurrent().Name);
-
-                if (user != null)
+                using (PrincipalContext ctx = new PrincipalContext(ContextType.Domain))
                 {
-                    var usersSid = user.Sid.ToString();
-                    var username = user.DisplayName;
-                    var userSamAccountName = user.SamAccountName;
-                    return usersSid;
+                    // find the user
+                    using (UserPrincipal user = UserPrincipal.FindByIdentity(ctx, WindowsIdentity.GetCurrent().Name))
+                    {
+                        if (user != null)
+                        {
+                            var usersSid = user.Sid.ToString();
+                            var username = user.DisplayName;
+                            var userSamAccountName = user.SamAccountName;
+                            GlobalVars.Loggi.Debug("Successfully retrieved SID for user: {Username}", username);
+                            return usersSid;
+                        }
+
+                        GlobalVars.Loggi.Warning("User not found in domain context for: {CurrentUser}", WindowsIdentity.GetCurrent().Name);
+                        return null;
+                    }
                 }
+            }
+            catch (PrincipalServerDownException psEx)
+            {
+                GlobalVars.Loggi.Error(psEx, "Domain controller is not available");
                 return null;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                GlobalVars.Loggi.Error(ex, "Error retrieving user SID for: {CurrentUser}", WindowsIdentity.GetCurrent().Name);
                 return null;
             }
         }
