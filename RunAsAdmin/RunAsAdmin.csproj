@@ -107,12 +107,10 @@
   </ItemGroup>
   <PropertyGroup>
     <StartupObject>RunAsAdmin.App</StartupObject>
-    <BaseOutputPath>C:\Users\HKOELBEL\source\repos\RunAsAdmin\RunAsAdmin\bin</BaseOutputPath>
-    <BaseIntermediateOutputPath>C:\Users\HKOELBEL\source\repos\RunAsAdmin\RunAsAdmin\obj</BaseIntermediateOutputPath>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <SignAssembly>False</SignAssembly>
-    <Authors></Authors>
-    <Product></Product>
+    <Authors>Hendrik Kölbel</Authors>
+    <Product>RunAsAdmin</Product>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="del &quot;$(ProjectDir)\$(OutDir)*.xml&quot;, &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.exe.config&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.dll.config&quot;&#xD;&#xA;if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)$(MSBuildProjectName)_Debug.zip' -Force)&#xD;&#xA;if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)$(MSBuildProjectName).zip' -Force)" />
