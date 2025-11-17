@@ -2,7 +2,6 @@
 ![GitHub Releases](https://img.shields.io/github/downloads/HendrikKoelbel/RunAsAdmin/latest/total)
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
-![License](https://img.shields.io/github/license/HendrikKoelbel/RunAsAdmin)
 
 # RunAsAdmin
 
@@ -21,29 +20,6 @@ A powerful Windows utility that enables administrators to start applications wit
 - **🎨 Modern UI**: Built with MahApps.Metro for a sleek, modern interface
 - **🔄 Auto-Update**: Automatic update checks via GitHub releases
 - **🖥️ Single-File Deployment**: Optimized for single-file publishing
-
-## What's New in v2.1.3
-
-This release includes important bug fixes and improvements for better reliability in non-Active Directory environments:
-
-### Bug Fixes
-- **Fixed Active Directory errors**: Properly handles `ActiveDirectoryOperationException` when the system is not joined to an AD domain
-- **Fixed Single-File Publish issues**: Application now works correctly when published as a single executable file
-- **Fixed Cryptographic errors**: Gracefully handles decryption failures when data was encrypted by a different user or machine
-- **Fixed DriveInfo errors**: Correctly validates executable path before checking drive type
-
-### Improvements
-- **Enhanced User Discovery**:
-  - Added cached AD user retrieval from local Windows profiles
-  - Works even when AD connection is unavailable
-  - Automatically falls back to cached users when AD is not accessible
-  - Reads user profiles from Windows registry for comprehensive user list
-- **Improved Domain Detection**:
-  - Now includes `Environment.UserDomainName` for better domain discovery
-  - Shows system domain even without AD forest connection
-  - Prevents duplicate entries in domain list
-- **Better Error Handling**: All errors are now logged appropriately with graceful degradation instead of crashes
-- **Improved Logging**: More detailed debug information for troubleshooting
 
 ## Getting Started
 You can easily download and run the program [here](https://github.com/HendrikKoelbel/RunAsAdmin/releases/latest)
