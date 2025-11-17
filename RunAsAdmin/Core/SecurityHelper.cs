@@ -72,7 +72,7 @@ namespace RunAsAdmin.Core
                 if (string.IsNullOrEmpty(textToDecrypt))
                 {
                     GlobalVars.Loggi.Warning("Decrypt called with null or empty string");
-                    return null;
+                    return string.Empty;
                 }
 
                 // Convert from Base64
@@ -92,18 +92,18 @@ namespace RunAsAdmin.Core
             }
             catch (FormatException formatEx)
             {
-                GlobalVars.Loggi.Error(formatEx, "Invalid Base64 format during decryption: {Message}", formatEx.Message);
-                throw new ArgumentException("The encrypted text is not in a valid format", nameof(textToDecrypt), formatEx);
+                GlobalVars.Loggi.Warning(formatEx, "Invalid Base64 format during decryption, returning empty string");
+                return string.Empty;
             }
             catch (CryptographicException cryptoEx)
             {
-                GlobalVars.Loggi.Error(cryptoEx, "Cryptographic error during decryption: {Message}", cryptoEx.Message);
-                throw new InvalidOperationException("Failed to decrypt data. The data may have been encrypted by a different user or machine.", cryptoEx);
+                GlobalVars.Loggi.Warning(cryptoEx, "Cryptographic error during decryption (data may be encrypted by different user/machine), returning empty string");
+                return string.Empty;
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, "Unexpected error during decryption: {Message}", ex.Message);
-                throw new InvalidOperationException("Decryption failed", ex);
+                GlobalVars.Loggi.Warning(ex, "Unexpected error during decryption, returning empty string");
+                return string.Empty;
             }
         }
 
