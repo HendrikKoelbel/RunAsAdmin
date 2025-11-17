@@ -62,9 +62,34 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                DriveInfo info = new DriveInfo(GlobalVars.ExecutablePath);
+                // Get executable path, fallback to process path for single-file publish
+                string executablePath = GlobalVars.ExecutablePath;
+                if (string.IsNullOrEmpty(executablePath))
+                {
+                    executablePath = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                    GlobalVars.Loggi.Debug("Using process path as fallback for startup check: {Path}", executablePath);
+                }
+
+                // Validate we have a path before proceeding
+                if (string.IsNullOrEmpty(executablePath) || !File.Exists(executablePath))
+                {
+                    GlobalVars.Loggi.Warning("Unable to determine executable path for network drive check");
+                    return;
+                }
+
+                // Extract root drive path (e.g., "C:\Program Files\App.exe" -> "C:\")
+                string driveLetter = Path.GetPathRoot(executablePath);
+                if (string.IsNullOrEmpty(driveLetter))
+                {
+                    GlobalVars.Loggi.Warning("Unable to determine drive letter from path: {Path}", executablePath);
+                    return;
+                }
+
+                DriveInfo info = new DriveInfo(driveLetter);
                 if (info.DriveType == DriveType.Network)
+                {
                     await this.ShowMessageAsync("Information at the start", "This program cannot be used from a server path. \nPlease run it from the desktop or a local path!");
+                }
             }
             catch (Exception ex)
             {
@@ -76,8 +101,30 @@ namespace RunAsAdmin.Views
         {
             try
             {
+                // Get assembly location, fallback to process path for single-file publish
+                string assemblyLocation = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(assemblyLocation))
+                {
+                    assemblyLocation = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                    GlobalVars.Loggi.Debug("Using process path as fallback: {Path}", assemblyLocation);
+                }
+
+                string runLevel = "Unknown";
+                if (!string.IsNullOrEmpty(assemblyLocation) && File.Exists(assemblyLocation))
+                {
+                    try
+                    {
+                        runLevel = UACHelper.UACHelper.GetExpectedRunLevel(assemblyLocation).ToString();
+                    }
+                    catch (Exception rlEx)
+                    {
+                        GlobalVars.Loggi.Warning(rlEx, "Could not determine run level for: {Path}", assemblyLocation);
+                        runLevel = "Unable to determine";
+                    }
+                }
+
                 UserRightsInfoLabel.Content = $"Current user: {Environment.UserName + " - " + WindowsIdentity.GetCurrent().Name}" +
-                    $"\nDefault Behavior: {UACHelper.UACHelper.GetExpectedRunLevel(Assembly.GetExecutingAssembly().Location)}" +
+                    $"\nDefault Behavior: {runLevel}" +
                     $"\nIs Elevated: {UACHelper.UACHelper.IsElevated}" +
                     $"\nIs Administrator: {UACHelper.UACHelper.IsAdministrator}" +
                     $"\nIs Desktop Owner: {UACHelper.UACHelper.IsDesktopOwner}" +

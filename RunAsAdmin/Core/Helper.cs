@@ -80,6 +80,11 @@ namespace RunAsAdmin.Core
                 GlobalVars.Loggi.Warning(adEx, "Active Directory not available, returning only local machine");
                 return domainList;
             }
+            catch (ActiveDirectoryOperationException adOpEx)
+            {
+                GlobalVars.Loggi.Warning(adOpEx, "Not associated with Active Directory domain or forest, returning only local machine");
+                return domainList;
+            }
             catch (Exception ex)
             {
                 GlobalVars.Loggi.Error(ex, "Error retrieving domain list, returning only local machine");
@@ -156,6 +161,11 @@ namespace RunAsAdmin.Core
             catch (ActiveDirectoryObjectNotFoundException adEx)
             {
                 GlobalVars.Loggi.Warning(adEx, "Active Directory not available");
+                return ADUsers;
+            }
+            catch (ActiveDirectoryOperationException adOpEx)
+            {
+                GlobalVars.Loggi.Warning(adOpEx, "Not associated with Active Directory domain or forest");
                 return ADUsers;
             }
             catch (PrincipalServerDownException psEx)
