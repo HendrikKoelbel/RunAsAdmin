@@ -66,10 +66,31 @@ namespace RunAsAdmin.Core
             try
             {
                 domainList.Add(Environment.MachineName);
+
+                // Try to get system domain
+                try
+                {
+                    string systemDomain = Environment.UserDomainName;
+                    if (!string.IsNullOrEmpty(systemDomain) &&
+                        !systemDomain.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase) &&
+                        !domainList.Contains(systemDomain))
+                    {
+                        domainList.Add(systemDomain);
+                        GlobalVars.Loggi.Debug("Added system domain: {Domain}", systemDomain);
+                    }
+                }
+                catch (Exception domainEx)
+                {
+                    GlobalVars.Loggi.Debug(domainEx, "Could not retrieve system domain");
+                }
+
                 using var forest = Forest.GetCurrentForest();
                 foreach (Domain domain in forest.Domains)
                 {
-                    domainList.Add(domain.Name);
+                    if (!domainList.Contains(domain.Name))
+                    {
+                        domainList.Add(domain.Name);
+                    }
                     domain.Dispose();
                 }
                 GlobalVars.Loggi.Debug("Successfully retrieved {Count} domains", domainList.Count);
@@ -77,17 +98,17 @@ namespace RunAsAdmin.Core
             }
             catch (ActiveDirectoryObjectNotFoundException adEx)
             {
-                GlobalVars.Loggi.Warning(adEx, "Active Directory not available, returning only local machine");
+                GlobalVars.Loggi.Warning(adEx, "Active Directory not available, returning available domains");
                 return domainList;
             }
             catch (ActiveDirectoryOperationException adOpEx)
             {
-                GlobalVars.Loggi.Warning(adOpEx, "Not associated with Active Directory domain or forest, returning only local machine");
+                GlobalVars.Loggi.Warning(adOpEx, "Not associated with Active Directory domain or forest, returning available domains");
                 return domainList;
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, "Error retrieving domain list, returning only local machine");
+                GlobalVars.Loggi.Error(ex, "Error retrieving domain list, returning available domains");
                 return domainList;
             }
         }
@@ -181,30 +202,131 @@ namespace RunAsAdmin.Core
         }
         #endregion
 
-        #region Get all users (AD + Local)
+        #region Get cached AD users from local profiles
+        /// <summary>
+        /// Gets AD users that have logged into this machine and have local profiles
+        /// This works even when AD is not accessible
+        /// </summary>
+        public static List<string> GetCachedADUsers()
+        {
+            var cachedUsers = new List<string>();
+            try
+            {
+                // Open the ProfileList registry key
+                using (var profileListKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"))
+                {
+                    if (profileListKey != null)
+                    {
+                        foreach (string sidString in profileListKey.GetSubKeyNames())
+                        {
+                            try
+                            {
+                                // Try to convert SID string to SecurityIdentifier
+                                if (sidString.StartsWith("S-1-5-21-")) // Domain user SID pattern
+                                {
+                                    var sid = new SecurityIdentifier(sidString);
+
+                                    // Try to translate SID to account name
+                                    try
+                                    {
+                                        var account = sid.Translate(typeof(NTAccount)) as NTAccount;
+                                        if (account != null)
+                                        {
+                                            string accountName = account.Value;
+                                            // Extract username from DOMAIN\Username format
+                                            if (accountName.Contains("\\"))
+                                            {
+                                                string username = accountName.Split('\\')[1];
+                                                if (!cachedUsers.Contains(username))
+                                                {
+                                                    cachedUsers.Add(username);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (IdentityNotMappedException)
+                                    {
+                                        // SID cannot be resolved (user might be deleted from AD)
+                                        GlobalVars.Loggi.Debug("Could not resolve SID: {SID}", sidString);
+                                    }
+                                }
+                            }
+                            catch (Exception sidEx)
+                            {
+                                GlobalVars.Loggi.Debug(sidEx, "Error processing SID: {SID}", sidString);
+                            }
+                        }
+                    }
+                }
+
+                GlobalVars.Loggi.Debug("Successfully retrieved {Count} cached AD users from profiles", cachedUsers.Count);
+                return cachedUsers;
+            }
+            catch (SecurityException secEx)
+            {
+                GlobalVars.Loggi.Warning(secEx, "Insufficient permissions to read user profiles");
+                return cachedUsers;
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                GlobalVars.Loggi.Warning(uaEx, "Access denied when reading user profiles");
+                return cachedUsers;
+            }
+            catch (Exception ex)
+            {
+                GlobalVars.Loggi.Error(ex, "Error retrieving cached AD users");
+                return cachedUsers;
+            }
+        }
+        #endregion
+
+        #region Get all users (AD + Local + Cached)
         public static List<string> GetAllUsers()
         {
             var allUsers = new List<string>();
             try
             {
+                // Get local users first
                 var localUsers = GetLocalUsers();
                 foreach (var user in localUsers)
                 {
-                    allUsers.Add(user);
-                }
-
-                var adUsers = GetADUsers();
-                foreach (var user in adUsers)
-                {
-                    // Avoid duplicates
                     if (!allUsers.Contains(user))
                     {
                         allUsers.Add(user);
                     }
                 }
 
-                GlobalVars.Loggi.Debug("Successfully retrieved {Count} total users ({LocalCount} local, {ADCount} AD)",
-                    allUsers.Count, localUsers.Count, adUsers.Count);
+                // Try to get AD users from directory
+                var adUsers = GetADUsers();
+                foreach (var user in adUsers)
+                {
+                    if (!allUsers.Contains(user))
+                    {
+                        allUsers.Add(user);
+                    }
+                }
+
+                // If AD is not available or returned no users, get cached AD users
+                if (adUsers.Count == 0)
+                {
+                    GlobalVars.Loggi.Information("AD users not available, retrieving cached AD users from local profiles");
+                    var cachedUsers = GetCachedADUsers();
+                    foreach (var user in cachedUsers)
+                    {
+                        if (!allUsers.Contains(user))
+                        {
+                            allUsers.Add(user);
+                        }
+                    }
+                    GlobalVars.Loggi.Debug("Successfully retrieved {Count} total users ({LocalCount} local, {CachedCount} cached AD)",
+                        allUsers.Count, localUsers.Count, cachedUsers.Count);
+                }
+                else
+                {
+                    GlobalVars.Loggi.Debug("Successfully retrieved {Count} total users ({LocalCount} local, {ADCount} AD)",
+                        allUsers.Count, localUsers.Count, adUsers.Count);
+                }
+
                 return allUsers;
             }
             catch (Exception ex)
