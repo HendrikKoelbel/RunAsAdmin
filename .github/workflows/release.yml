@@ -140,7 +140,7 @@ jobs:
         run: dotnet restore RunAsAdmin/RunAsAdmin.csproj
 
       - name: Publish Single-File Release
-        run: dotnet publish RunAsAdmin/RunAsAdmin.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false
+        run: dotnet publish RunAsAdmin/RunAsAdmin.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false
 
       - name: Create Release Package
         id: create_package

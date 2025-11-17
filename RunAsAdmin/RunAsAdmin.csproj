@@ -13,7 +13,6 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
 
