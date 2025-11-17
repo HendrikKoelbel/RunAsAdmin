@@ -102,6 +102,10 @@
     <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.421302">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Fody" Version="6.8.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Costura.Fody" Version="5.7.0" PrivateAssets="All"/>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="8.0.10" />
   </ItemGroup>
@@ -113,6 +117,6 @@
     <Product>RunAsAdmin</Product>
   </PropertyGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="del &quot;$(ProjectDir)\$(OutDir)*.xml&quot;, &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.exe.config&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.dll.config&quot;&#xD;&#xA;if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)$(MSBuildProjectName)_Debug.zip' -Force)&#xD;&#xA;if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)$(MSBuildProjectName).zip' -Force)" />
+    <Exec Command="del &quot;$(ProjectDir)\$(OutDir)*.xml&quot;, &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.exe.config&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.dll.config&quot;&#xD;&#xA;if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)$(MSBuildProjectName)_Debug.zip' -Force)&#xD;&#xA;if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)$(MSBuildProjectName).zip' -Force)" />
   </Target>
 </Project>
