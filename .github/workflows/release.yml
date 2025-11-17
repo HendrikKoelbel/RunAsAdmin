@@ -38,6 +38,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Debug - Show Checkout Info
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Checkout Information" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "GitHub SHA: ${{ github.sha }}" -ForegroundColor Yellow
+          Write-Host "GitHub Ref: ${{ github.ref }}" -ForegroundColor Yellow
+          Write-Host "GitHub Event: ${{ github.event_name }}" -ForegroundColor Yellow
+          Write-Host "Working Directory: $(Get-Location)" -ForegroundColor Yellow
+
+          if (Test-Path "RunAsAdmin/Properties/AssemblyInfo.cs") {
+            Write-Host "✓ AssemblyInfo.cs exists" -ForegroundColor Green
+            $content = Get-Content "RunAsAdmin/Properties/AssemblyInfo.cs" -Raw
+            if ($content -match '\[assembly:\s*AssemblyVersion\s*\(\s*"([^"]+)"\s*\)\]') {
+              Write-Host "  Version found: $($matches[1])" -ForegroundColor Green
+            }
+          } else {
+            Write-Host "✗ AssemblyInfo.cs NOT FOUND" -ForegroundColor Red
+          }
+          Write-Host "========================================" -ForegroundColor Cyan
 
       - name: Run Version Check
         id: version_check
@@ -92,6 +115,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.sha }}
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
