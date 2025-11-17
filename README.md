@@ -5,6 +5,26 @@
 
 RunAsAdmin is a small program that allows administrators to start other programs with elevated privileges when logged in as a normal user.
 
+## What's New in v2.1.2
+
+This release includes important bug fixes and improvements for better reliability in non-Active Directory environments:
+
+### Bug Fixes
+- **Fixed Active Directory errors**: Properly handles `ActiveDirectoryOperationException` when the system is not joined to an AD domain
+- **Fixed Single-File Publish issues**: Application now works correctly when published as a single executable file
+- **Fixed Cryptographic errors**: Gracefully handles decryption failures when data was encrypted by a different user or machine
+- **Fixed DriveInfo errors**: Correctly validates executable path before checking drive type
+
+### Improvements
+- **Enhanced User Discovery**:
+  - Added cached AD user retrieval from local Windows profiles
+  - Works even when AD connection is unavailable
+  - Automatically falls back to cached users when AD is not accessible
+- **Improved Domain Detection**:
+  - Now includes `Environment.UserDomainName` for better domain discovery
+  - Shows system domain even without AD forest connection
+- **Better Error Handling**: All errors are now logged appropriately with graceful degradation instead of crashes
+
 ## Getting Started
 You can easily download and run the program [here](https://github.com/HendrikKoelbel/RunAsAdmin/releases/latest)
 
