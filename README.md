@@ -34,9 +34,9 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 
 | Architecture | Download Link |
 |--------------|---------------|
-| **x64** (most common) | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-x64-installer) |
-| **x86** (32-bit) | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-x86-installer) |
-| **ARM64** | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0-windows-arm64-installer) |
+| **x64** (most common) | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.22-windows-x64-installer) |
+| **x86** (32-bit) | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.22-windows-x86-installer) |
+| **ARM64** | [Download](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.22-windows-arm64-installer) |
 
 ### Installation
 
