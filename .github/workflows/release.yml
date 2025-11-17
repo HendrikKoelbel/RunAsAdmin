@@ -209,49 +209,12 @@ jobs:
             Write-Host "✓ Tag $version created and pushed" -ForegroundColor Green
           }
 
-      - name: Generate Release Notes
-        id: release_notes
-        shell: pwsh
-        run: |
-          $changelogPath = "CHANGELOG.md"
-          $notesPath = "release_notes.md"
-
-          if (Test-Path $changelogPath) {
-            Copy-Item $changelogPath $notesPath
-            Write-Host "✓ Using CHANGELOG.md for release notes" -ForegroundColor Green
-          } else {
-            $version = "${{ needs.check-version.outputs.current_version }}"
-
-            $lines = @(
-              "# Release $version",
-              "",
-              "## Changes",
-              "- Build automated via GitHub Actions",
-              "- For detailed changes, see commit history",
-              "",
-              "## Installation",
-              "Download RunAsAdmin.zip and extract it to your desired location.",
-              "",
-              "## Requirements",
-              "- .NET 8.0 Runtime (Desktop)",
-              "- Windows OS",
-              "",
-              "## Downloads",
-              "See assets below."
-            )
-
-            $lines | Out-File -FilePath $notesPath -Encoding utf8
-            Write-Host "✓ Generated default release notes" -ForegroundColor Green
-          }
-
-          echo "notes_path=$notesPath" >> $env:GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.check-version.outputs.release_version }}
           name: Release ${{ needs.check-version.outputs.release_version }}
-          body_path: ${{ steps.release_notes.outputs.notes_path }}
+          generate_release_notes: true
           files: |
             RunAsAdmin.zip
           draft: false
