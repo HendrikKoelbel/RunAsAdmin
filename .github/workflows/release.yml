@@ -117,11 +117,10 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
       - name: Display Release Information
         shell: pwsh
@@ -134,57 +133,68 @@ jobs:
           Write-Host "Commit:          ${{ github.sha }}" -ForegroundColor Yellow
           Write-Host "Release Version: ${{ needs.check-version.outputs.release_version }}" -ForegroundColor Green
           Write-Host "Event Type:      ${{ github.event_name }}" -ForegroundColor Yellow
+          Write-Host ".NET Version:    $(dotnet --version)" -ForegroundColor Yellow
           Write-Host "========================================" -ForegroundColor Cyan
 
-      - name: Restore NuGet Packages
-        run: nuget restore RunAsAdmin.sln
+      - name: Restore Dependencies
+        run: dotnet restore RunAsAdmin/RunAsAdmin.csproj
 
-      - name: Build Solution (Release)
-        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Release" /v:minimal /p:DebugSymbols=false /p:DebugType=None
+      - name: Publish Single-File Release
+        run: dotnet publish RunAsAdmin/RunAsAdmin.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false
 
-      - name: Verify Build Artifacts
-        id: verify_artifacts
+      - name: Create Release Package
+        id: create_package
         shell: pwsh
         run: |
-          Write-Host "Verifying build artifacts..." -ForegroundColor Yellow
+          Write-Host "Creating release package..." -ForegroundColor Yellow
 
-          $releaseExe = "RunAsAdmin\bin\Release\net8.0-windows\RunAsAdmin.exe"
+          $publishPath = "RunAsAdmin\bin\Release\net8.0-windows\win-x64\publish"
+          $releaseExe = Join-Path $publishPath "RunAsAdmin.exe"
           $releaseZip = "RunAsAdmin.zip"
 
-          # Check for EXE
+          # Verify publish directory exists
+          if (-not (Test-Path $publishPath)) {
+            Write-Host "✗ Publish directory not found: $publishPath" -ForegroundColor Red
+            exit 1
+          }
+
+          # Check for single-file EXE
           if (-not (Test-Path $releaseExe)) {
-            Write-Host "✗ Release executable not found: $releaseExe" -ForegroundColor Red
+            Write-Host "✗ Single-file executable not found: $releaseExe" -ForegroundColor Red
+            Write-Host "Contents of publish directory:" -ForegroundColor Yellow
+            Get-ChildItem $publishPath | ForEach-Object { Write-Host "  - $($_.Name)" }
             exit 1
           }
 
           $exeSize = (Get-Item $releaseExe).Length
-          Write-Host "✓ Release executable found: $releaseExe ($exeSize bytes)" -ForegroundColor Green
+          $exeSizeMB = [math]::Round($exeSize / 1MB, 2)
+          Write-Host "✓ Single-file executable found: $releaseExe ($exeSizeMB MB)" -ForegroundColor Green
 
-          # Check for ZIP (created by PostBuild event)
+          # Verify it's truly a single file (no DLLs should be present)
+          $dllCount = (Get-ChildItem $publishPath -Filter "*.dll" | Measure-Object).Count
+          if ($dllCount -gt 0) {
+            Write-Host "⚠ Warning: Found $dllCount DLL files in publish directory" -ForegroundColor Yellow
+            Write-Host "This may indicate single-file publishing did not work correctly" -ForegroundColor Yellow
+          } else {
+            Write-Host "✓ No DLL files found - single-file packaging successful!" -ForegroundColor Green
+          }
+
+          # Create ZIP with only the EXE
+          Write-Host "Creating ZIP package..." -ForegroundColor Yellow
+          Compress-Archive -Path $releaseExe -DestinationPath $releaseZip -Force
+
           if (-not (Test-Path $releaseZip)) {
-            Write-Host "⚠ RunAsAdmin.zip not found - PostBuild may have failed" -ForegroundColor Yellow
-            Write-Host "Creating ZIP manually..." -ForegroundColor Yellow
-
-            # Create ZIP manually
-            $sourcePath = "RunAsAdmin\bin\Release\net8.0-windows\*"
-            Compress-Archive -Path $sourcePath -DestinationPath $releaseZip -Force
-
-            if (-not (Test-Path $releaseZip)) {
-              Write-Host "✗ Failed to create ZIP file" -ForegroundColor Red
-              exit 1
-            }
+            Write-Host "✗ Failed to create ZIP file" -ForegroundColor Red
+            exit 1
           }
 
           $zipSize = (Get-Item $releaseZip).Length
-          Write-Host "✓ Release ZIP ready: $releaseZip ($zipSize bytes)" -ForegroundColor Green
-
-          # Validate ZIP size
-          if ($zipSize -lt 1MB) {
-            Write-Host "⚠ Warning: ZIP file seems small ($zipSize bytes)" -ForegroundColor Yellow
-          }
+          $zipSizeMB = [math]::Round($zipSize / 1MB, 2)
+          Write-Host "✓ Release ZIP ready: $releaseZip ($zipSizeMB MB)" -ForegroundColor Green
 
           echo "zip_path=$releaseZip" >> $env:GITHUB_OUTPUT
           echo "zip_size=$zipSize" >> $env:GITHUB_OUTPUT
+          echo "exe_size=$exeSize" >> $env:GITHUB_OUTPUT
 
       - name: Create Git Tag
         shell: pwsh
@@ -246,6 +256,6 @@ jobs:
           name: release-artifacts-${{ needs.check-version.outputs.current_version }}
           path: |
             RunAsAdmin.zip
-            RunAsAdmin/bin/Release/net8.0-windows/
+            RunAsAdmin/bin/Release/net8.0-windows/win-x64/publish/RunAsAdmin.exe
           retention-days: 30
           if-no-files-found: warn

@@ -20,11 +20,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
 
       - name: Display Build Information
         shell: pwsh
@@ -36,45 +35,51 @@ jobs:
           Write-Host "Branch: ${{ github.ref_name }}" -ForegroundColor Yellow
           Write-Host "Commit: ${{ github.sha }}" -ForegroundColor Yellow
           Write-Host "Event: ${{ github.event_name }}" -ForegroundColor Yellow
+          Write-Host ".NET Version: $(dotnet --version)" -ForegroundColor Yellow
           Write-Host "========================================" -ForegroundColor Cyan
 
-      - name: Restore NuGet Packages
-        run: nuget restore RunAsAdmin.sln
+      - name: Restore Dependencies
+        run: dotnet restore RunAsAdmin/RunAsAdmin.csproj
 
-      - name: Build Solution (Debug)
-        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Debug" /v:minimal
+      - name: Build Debug
+        run: dotnet build RunAsAdmin/RunAsAdmin.csproj -c Debug --no-restore
 
-      - name: Build Solution (Release)
-        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Release" /v:minimal
+      - name: Publish Release (Single-File)
+        run: dotnet publish RunAsAdmin/RunAsAdmin.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
 
       - name: Verify Build Artifacts
         shell: pwsh
         run: |
           Write-Host "Checking for build artifacts..." -ForegroundColor Yellow
 
-          $debugExe = "RunAsAdmin\bin\Debug\net8.0-windows\RunAsAdmin.exe"
-          $releaseExe = "RunAsAdmin\bin\Release\net8.0-windows\RunAsAdmin.exe"
-          $releaseZip = "RunAsAdmin.zip"
+          $debugExe = "RunAsAdmin\bin\Debug\net8.0-windows\win-x64\RunAsAdmin.exe"
+          $publishExe = "RunAsAdmin\bin\Release\net8.0-windows\win-x64\publish\RunAsAdmin.exe"
 
           if (Test-Path $debugExe) {
-            Write-Host "  ✓ Debug build successful: $debugExe" -ForegroundColor Green
+            $debugSize = (Get-Item $debugExe).Length
+            $debugSizeMB = [math]::Round($debugSize / 1MB, 2)
+            Write-Host "  ✓ Debug build successful: $debugExe ($debugSizeMB MB)" -ForegroundColor Green
           } else {
             Write-Host "  ✗ Debug build failed: $debugExe not found" -ForegroundColor Red
             exit 1
           }
 
-          if (Test-Path $releaseExe) {
-            Write-Host "  ✓ Release build successful: $releaseExe" -ForegroundColor Green
-          } else {
-            Write-Host "  ✗ Release build failed: $releaseExe not found" -ForegroundColor Red
-            exit 1
-          }
+          if (Test-Path $publishExe) {
+            $releaseSize = (Get-Item $publishExe).Length
+            $releaseSizeMB = [math]::Round($releaseSize / 1MB, 2)
+            Write-Host "  ✓ Release single-file publish successful: $publishExe ($releaseSizeMB MB)" -ForegroundColor Green
 
-          if (Test-Path $releaseZip) {
-            $zipSize = (Get-Item $releaseZip).Length
-            Write-Host "  ✓ Release ZIP created: $releaseZip ($zipSize bytes)" -ForegroundColor Green
+            # Check if any DLLs were created (should not be present for single-file)
+            $publishDir = "RunAsAdmin\bin\Release\net8.0-windows\win-x64\publish"
+            $dllCount = (Get-ChildItem $publishDir -Filter "*.dll" -ErrorAction SilentlyContinue | Measure-Object).Count
+            if ($dllCount -eq 0) {
+              Write-Host "  ✓ Single-file packaging verified (no DLLs)" -ForegroundColor Green
+            } else {
+              Write-Host "  ⚠ Warning: Found $dllCount DLL(s) in publish directory" -ForegroundColor Yellow
+            }
           } else {
-            Write-Host "  ⚠ Release ZIP not found (expected from PostBuild)" -ForegroundColor Yellow
+            Write-Host "  ✗ Release publish failed: $publishExe not found" -ForegroundColor Red
+            exit 1
           }
 
       - name: Upload Build Artifacts
@@ -83,8 +88,7 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            RunAsAdmin.zip
-            RunAsAdmin/bin/Release/net8.0-windows/RunAsAdmin.exe
+            RunAsAdmin/bin/Release/net8.0-windows/win-x64/publish/RunAsAdmin.exe
           retention-days: 7
           if-no-files-found: warn
 

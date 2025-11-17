@@ -3,45 +3,28 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <OutputType>WinExe</OutputType>
     <LangVersion>latest</LangVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <CopySQLiteInteropFiles>false</CopySQLiteInteropFiles>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+
+    <!-- Single-File Publishing Configuration -->
+    <PublishSingleFile>true</PublishSingleFile>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
+
   <PropertyGroup>
     <ApplicationIcon>Resources\imageres_78.ico</ApplicationIcon>
+    <StartupObject>RunAsAdmin.App</StartupObject>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <SignAssembly>False</SignAssembly>
+    <Authors>Hendrik Kölbel</Authors>
+    <Product>RunAsAdmin</Product>
   </PropertyGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 und x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Castle.Core">
       <Version>5.2.1</Version>
@@ -104,14 +87,4 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="10.0.0" />
   </ItemGroup>
-  <PropertyGroup>
-    <StartupObject>RunAsAdmin.App</StartupObject>
-    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <SignAssembly>False</SignAssembly>
-    <Authors>Hendrik Kölbel</Authors>
-    <Product>RunAsAdmin</Product>
-  </PropertyGroup>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="del &quot;$(ProjectDir)\$(OutDir)*.xml&quot;, &quot;$(TargetDir)*.pdb&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.exe.config&quot;&#xD;&#xA;del &quot;$(ProjectDir)\$(OutDir)*.dll.config&quot;&#xD;&#xA;if $(ConfigurationName) == Debug (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.dll', '$(TargetDir)*.pdb', '$(TargetDir)*.exe', '$(TargetDir)*.xml', '$(TargetDir)*.config' -DestinationPath '$(SolutionDir)$(MSBuildProjectName)_Debug.zip' -Force)&#xD;&#xA;if $(ConfigurationName) == Release (powershell.exe -Command Compress-Archive -CompressionLevel Optimal -Path '$(TargetDir)*.exe' -DestinationPath '$(SolutionDir)$(MSBuildProjectName).zip' -Force)" />
-  </Target>
 </Project>
