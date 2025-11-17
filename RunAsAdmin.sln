@@ -7,7 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RunAsAdmin", "RunAsAdmin\Ru
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AFBAC3CF-927E-4860-89EC-9B4353607C46}"
 	ProjectSection(SolutionItems) = preProject
-		CHANGELOG.md = CHANGELOG.md
 		README.md = README.md
 		RunAsAdmin.zip = RunAsAdmin.zip
 	EndProjectSection
