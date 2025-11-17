@@ -3,6 +3,7 @@ using Serilog;
 using Serilog.Debugging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -123,12 +124,38 @@ namespace RunAsAdmin
         }
         /// <summary>
         /// Returns only the path of the application
+        /// Handles single-file publish scenarios where Assembly.Location is empty
         /// </summary>
-        public static string BasePath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        public static string BasePath
+        {
+            get
+            {
+                string location = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(location))
+                {
+                    // Fallback for single-file publish
+                    location = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                }
+                return !string.IsNullOrEmpty(location) ? Path.GetDirectoryName(location) : null;
+            }
+        }
         /// <summary>
         /// Returns the file path of the application
+        /// Handles single-file publish scenarios where Assembly.Location is empty
         /// </summary>
-        public static string ExecutablePath => Assembly.GetExecutingAssembly().Location;
+        public static string ExecutablePath
+        {
+            get
+            {
+                string location = Assembly.GetExecutingAssembly().Location;
+                if (string.IsNullOrEmpty(location))
+                {
+                    // Fallback for single-file publish
+                    location = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                }
+                return location;
+            }
+        }
         #endregion
 
         #region MahApps Style

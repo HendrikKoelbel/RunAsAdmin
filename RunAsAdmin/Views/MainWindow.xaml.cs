@@ -262,6 +262,22 @@ namespace RunAsAdmin.Views
                 {
                     throw new ArgumentNullException();
                 }
+
+                // Validate BasePath and ExecutablePath
+                if (string.IsNullOrEmpty(GlobalVars.BasePath))
+                {
+                    GlobalVars.Loggi.Error("BasePath is null or empty, cannot restart application");
+                    await this.ShowMessageAsync("Error", "Unable to determine application path. Please restart the application manually.");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(GlobalVars.ExecutablePath))
+                {
+                    GlobalVars.Loggi.Error("ExecutablePath is null or empty, cannot restart application");
+                    await this.ShowMessageAsync("Error", "Unable to determine application executable path. Please restart the application manually.");
+                    return;
+                }
+
                 Mouse.OverrideCursor = Cursors.Wait;
 
                 bool hasAccess = false;
@@ -350,7 +366,11 @@ namespace RunAsAdmin.Views
                         {
                             try
                             {
-                                UACHelper.UACHelper.StartElevated(new ProcessStartInfo(path));
+                                var startInfo = new ProcessStartInfo(path)
+                                {
+                                    UseShellExecute = true
+                                };
+                                UACHelper.UACHelper.StartElevated(startInfo);
                             }
                             catch (Win32Exception win32ex)
                             {
