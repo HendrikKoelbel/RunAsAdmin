@@ -37,41 +37,49 @@ function Get-AssemblyVersion {
         exit 1
     }
 
-    $content = Get-Content $FilePath -Raw
+    # Read file line by line to avoid matching commented-out versions
+    $lines = Get-Content $FilePath
 
-    # Match [assembly: AssemblyVersion("x.x.x")]
-    if ($content -match '\[assembly:\s*AssemblyVersion\s*\(\s*"([^"]+)"\s*\)\]') {
-        $version = $matches[1]
-
-        # Check for wildcard version (e.g., "1.0.*")
-        if ($version -match '\*') {
-            Write-Host ""
-            Write-Host "========================================" -ForegroundColor Red
-            Write-Host "ERROR: Wildcard Version Detected" -ForegroundColor Red
-            Write-Host "========================================" -ForegroundColor Red
-            Write-Host ""
-            Write-Host "AssemblyVersion contains wildcard: $version" -ForegroundColor Yellow
-            Write-Host ""
-            Write-Host "The automated release workflow requires a fixed version number." -ForegroundColor Yellow
-            Write-Host "Wildcard versions (e.g., '1.0.*') cannot be used for version comparison." -ForegroundColor Yellow
-            Write-Host ""
-            Write-Host "Please update the AssemblyInfo.cs file with a fixed version:" -ForegroundColor Cyan
-            Write-Host "  File: $FilePath" -ForegroundColor White
-            Write-Host "  Current: [assembly: AssemblyVersion(`"$version`")]" -ForegroundColor Red
-            Write-Host "  Example: [assembly: AssemblyVersion(`"2.0.3`")]" -ForegroundColor Green
-            Write-Host ""
-            Write-Host "Steps to fix:" -ForegroundColor Cyan
-            Write-Host "  1. Edit $FilePath" -ForegroundColor White
-            Write-Host "  2. Replace wildcard version with fixed version (e.g., 2.0.3)" -ForegroundColor White
-            Write-Host "  3. Also update AssemblyFileVersion to match" -ForegroundColor White
-            Write-Host "  4. Commit and push the changes" -ForegroundColor White
-            Write-Host ""
-            Write-Host "========================================" -ForegroundColor Red
-            Write-Error "Wildcard version detected: $version. Please use a fixed version number."
-            exit 1
+    foreach ($line in $lines) {
+        # Skip empty lines and comments
+        if ([string]::IsNullOrWhiteSpace($line) -or $line.TrimStart() -match '^//') {
+            continue
         }
 
-        return $version
+        # Match [assembly: AssemblyVersion("x.x.x")]
+        if ($line -match '\[assembly:\s*AssemblyVersion\s*\(\s*"([^"]+)"\s*\)\]') {
+            $version = $matches[1]
+
+            # Check for wildcard version (e.g., "1.0.*")
+            if ($version -match '\*') {
+                Write-Host ""
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host "ERROR: Wildcard Version Detected" -ForegroundColor Red
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "AssemblyVersion contains wildcard: $version" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "The automated release workflow requires a fixed version number." -ForegroundColor Yellow
+                Write-Host "Wildcard versions (e.g., '1.0.*') cannot be used for version comparison." -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "Please update the AssemblyInfo.cs file with a fixed version:" -ForegroundColor Cyan
+                Write-Host "  File: $FilePath" -ForegroundColor White
+                Write-Host "  Current: [assembly: AssemblyVersion(`"$version`")]" -ForegroundColor Red
+                Write-Host "  Example: [assembly: AssemblyVersion(`"2.0.3`")]" -ForegroundColor Green
+                Write-Host ""
+                Write-Host "Steps to fix:" -ForegroundColor Cyan
+                Write-Host "  1. Edit $FilePath" -ForegroundColor White
+                Write-Host "  2. Replace wildcard version with fixed version (e.g., 2.0.3)" -ForegroundColor White
+                Write-Host "  3. Also update AssemblyFileVersion to match" -ForegroundColor White
+                Write-Host "  4. Commit and push the changes" -ForegroundColor White
+                Write-Host ""
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Error "Wildcard version detected: $version. Please use a fixed version number."
+                exit 1
+            }
+
+            return $version
+        }
     }
 
     Write-Error "Could not extract version from AssemblyInfo.cs"
