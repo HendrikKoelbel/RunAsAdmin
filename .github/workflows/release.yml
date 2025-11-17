@@ -1,0 +1,264 @@
+name: Automated Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/ci.yml'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force release even if version unchanged'
+        required: false
+        type: boolean
+        default: false
+      skip_version_check:
+        description: 'Skip version validation (use with caution)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  check-version:
+    name: Check Version
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version_check.outputs.should_release }}
+      current_version: ${{ steps.version_check.outputs.current_version }}
+      latest_version: ${{ steps.version_check.outputs.latest_version }}
+      release_version: ${{ steps.version_check.outputs.release_version }}
+      version_changed: ${{ steps.version_check.outputs.version_changed }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Version Check
+        id: version_check
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $scriptPath = ".github/scripts/check-version.ps1"
+          $assemblyInfoPath = "RunAsAdmin/Properties/AssemblyInfo.cs"
+          $repo = "${{ github.repository }}"
+
+          & $scriptPath -AssemblyInfoPath $assemblyInfoPath -GitHubRepo $repo -GitHubToken $env:GITHUB_TOKEN
+
+      - name: Apply Manual Overrides
+        if: github.event_name == 'workflow_dispatch'
+        id: override_check
+        shell: pwsh
+        run: |
+          $shouldRelease = "${{ steps.version_check.outputs.should_release }}"
+          $forceRelease = "${{ github.event.inputs.force_release }}"
+
+          if ($forceRelease -eq "true") {
+            Write-Host "Force release enabled - overriding version check" -ForegroundColor Yellow
+            echo "should_release=true" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "should_release=$shouldRelease" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Version Check Summary
+        shell: pwsh
+        run: |
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Version Check Summary" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Current Version: ${{ steps.version_check.outputs.current_version }}" -ForegroundColor Yellow
+          Write-Host "Latest Release:  ${{ steps.version_check.outputs.latest_version }}" -ForegroundColor Yellow
+          Write-Host "Should Release:  ${{ steps.version_check.outputs.should_release }}" -ForegroundColor Yellow
+          Write-Host "Release Version: ${{ steps.version_check.outputs.release_version }}" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
+
+  build-and-release:
+    name: Build and Release
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true' || github.event.inputs.force_release == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Display Release Information
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Release Build Information" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Repository:      ${{ github.repository }}" -ForegroundColor Yellow
+          Write-Host "Branch:          ${{ github.ref_name }}" -ForegroundColor Yellow
+          Write-Host "Commit:          ${{ github.sha }}" -ForegroundColor Yellow
+          Write-Host "Release Version: ${{ needs.check-version.outputs.release_version }}" -ForegroundColor Green
+          Write-Host "Event Type:      ${{ github.event_name }}" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
+
+      - name: Restore NuGet Packages
+        run: nuget restore RunAsAdmin.sln
+
+      - name: Build Solution (Release)
+        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Release" /v:minimal /p:DebugSymbols=false /p:DebugType=None
+
+      - name: Verify Build Artifacts
+        id: verify_artifacts
+        shell: pwsh
+        run: |
+          Write-Host "Verifying build artifacts..." -ForegroundColor Yellow
+
+          $releaseExe = "RunAsAdmin\bin\Release\net8.0-windows\RunAsAdmin.exe"
+          $releaseZip = "RunAsAdmin.zip"
+
+          # Check for EXE
+          if (-not (Test-Path $releaseExe)) {
+            Write-Host "✗ Release executable not found: $releaseExe" -ForegroundColor Red
+            exit 1
+          }
+
+          $exeSize = (Get-Item $releaseExe).Length
+          Write-Host "✓ Release executable found: $releaseExe ($exeSize bytes)" -ForegroundColor Green
+
+          # Check for ZIP (created by PostBuild event)
+          if (-not (Test-Path $releaseZip)) {
+            Write-Host "⚠ RunAsAdmin.zip not found - PostBuild may have failed" -ForegroundColor Yellow
+            Write-Host "Creating ZIP manually..." -ForegroundColor Yellow
+
+            # Create ZIP manually
+            $sourcePath = "RunAsAdmin\bin\Release\net8.0-windows\*"
+            Compress-Archive -Path $sourcePath -DestinationPath $releaseZip -Force
+
+            if (-not (Test-Path $releaseZip)) {
+              Write-Host "✗ Failed to create ZIP file" -ForegroundColor Red
+              exit 1
+            }
+          }
+
+          $zipSize = (Get-Item $releaseZip).Length
+          Write-Host "✓ Release ZIP ready: $releaseZip ($zipSize bytes)" -ForegroundColor Green
+
+          # Validate ZIP size
+          if ($zipSize -lt 1MB) {
+            Write-Host "⚠ Warning: ZIP file seems small ($zipSize bytes)" -ForegroundColor Yellow
+          }
+
+          echo "zip_path=$releaseZip" >> $env:GITHUB_OUTPUT
+          echo "zip_size=$zipSize" >> $env:GITHUB_OUTPUT
+
+      - name: Create Git Tag
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = "${{ needs.check-version.outputs.release_version }}"
+
+          Write-Host "Creating Git tag: $version" -ForegroundColor Yellow
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Check if tag already exists
+          $tagExists = git tag -l $version
+
+          if ($tagExists) {
+            Write-Host "⚠ Tag $version already exists - skipping tag creation" -ForegroundColor Yellow
+          } else {
+            git tag -a $version -m "Release $version"
+            git push origin $version
+            Write-Host "✓ Tag $version created and pushed" -ForegroundColor Green
+          }
+
+      - name: Generate Release Notes
+        id: release_notes
+        shell: pwsh
+        run: |
+          $changelogPath = "CHANGELOG.md"
+          $notesPath = "release_notes.md"
+
+          if (Test-Path $changelogPath) {
+            Copy-Item $changelogPath $notesPath
+            Write-Host "✓ Using CHANGELOG.md for release notes" -ForegroundColor Green
+          } else {
+            $version = "${{ needs.check-version.outputs.current_version }}"
+
+            $lines = @(
+              "# Release $version",
+              "",
+              "## Changes",
+              "- Build automated via GitHub Actions",
+              "- For detailed changes, see commit history",
+              "",
+              "## Installation",
+              "Download RunAsAdmin.zip and extract it to your desired location.",
+              "",
+              "## Requirements",
+              "- .NET 8.0 Runtime (Desktop)",
+              "- Windows OS",
+              "",
+              "## Downloads",
+              "See assets below."
+            )
+
+            $lines | Out-File -FilePath $notesPath -Encoding utf8
+            Write-Host "✓ Generated default release notes" -ForegroundColor Green
+          }
+
+          echo "notes_path=$notesPath" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-version.outputs.release_version }}
+          name: Release ${{ needs.check-version.outputs.release_version }}
+          body_path: ${{ steps.release_notes.outputs.notes_path }}
+          files: |
+            RunAsAdmin.zip
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Release Summary
+        if: success()
+        shell: pwsh
+        run: |
+          $version = "${{ needs.check-version.outputs.release_version }}"
+          $repo = "${{ github.repository }}"
+
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Release Created Successfully!" -ForegroundColor Green
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Version: $version" -ForegroundColor Yellow
+          Write-Host "URL: https://github.com/$repo/releases/tag/$version" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
+
+      - name: Upload Build Artifacts (for debugging)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ needs.check-version.outputs.current_version }}
+          path: |
+            RunAsAdmin.zip
+            RunAsAdmin/bin/Release/net8.0-windows/
+          retention-days: 30
+          if-no-files-found: warn

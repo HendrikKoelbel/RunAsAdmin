@@ -1,0 +1,108 @@
+name: CI Build
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Display Build Information
+        shell: pwsh
+        run: |
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Build Information" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Repository: ${{ github.repository }}" -ForegroundColor Yellow
+          Write-Host "Branch: ${{ github.ref_name }}" -ForegroundColor Yellow
+          Write-Host "Commit: ${{ github.sha }}" -ForegroundColor Yellow
+          Write-Host "Event: ${{ github.event_name }}" -ForegroundColor Yellow
+          Write-Host "========================================" -ForegroundColor Cyan
+
+      - name: Restore NuGet Packages
+        run: nuget restore RunAsAdmin.sln
+
+      - name: Build Solution (Debug)
+        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Debug" /v:minimal
+
+      - name: Build Solution (Release)
+        run: msbuild.exe RunAsAdmin.sln /p:Platform="Any CPU" /p:Configuration="Release" /v:minimal
+
+      - name: Verify Build Artifacts
+        shell: pwsh
+        run: |
+          Write-Host "Checking for build artifacts..." -ForegroundColor Yellow
+
+          $debugExe = "RunAsAdmin\bin\Debug\net8.0-windows\RunAsAdmin.exe"
+          $releaseExe = "RunAsAdmin\bin\Release\net8.0-windows\RunAsAdmin.exe"
+          $releaseZip = "RunAsAdmin.zip"
+
+          if (Test-Path $debugExe) {
+            Write-Host "  ✓ Debug build successful: $debugExe" -ForegroundColor Green
+          } else {
+            Write-Host "  ✗ Debug build failed: $debugExe not found" -ForegroundColor Red
+            exit 1
+          }
+
+          if (Test-Path $releaseExe) {
+            Write-Host "  ✓ Release build successful: $releaseExe" -ForegroundColor Green
+          } else {
+            Write-Host "  ✗ Release build failed: $releaseExe not found" -ForegroundColor Red
+            exit 1
+          }
+
+          if (Test-Path $releaseZip) {
+            $zipSize = (Get-Item $releaseZip).Length
+            Write-Host "  ✓ Release ZIP created: $releaseZip ($zipSize bytes)" -ForegroundColor Green
+          } else {
+            Write-Host "  ⚠ Release ZIP not found (expected from PostBuild)" -ForegroundColor Yellow
+          }
+
+      - name: Upload Build Artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            RunAsAdmin.zip
+            RunAsAdmin/bin/Release/net8.0-windows/RunAsAdmin.exe
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Build Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host ""
+          Write-Host "========================================" -ForegroundColor Cyan
+          Write-Host "Build Summary" -ForegroundColor Cyan
+          Write-Host "========================================" -ForegroundColor Cyan
+
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ CI Build completed successfully" -ForegroundColor Green
+          } else {
+            Write-Host "✗ CI Build failed" -ForegroundColor Red
+          }
+
+          Write-Host "========================================" -ForegroundColor Cyan
