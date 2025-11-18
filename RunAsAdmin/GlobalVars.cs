@@ -130,12 +130,36 @@ namespace RunAsAdmin
         {
             get
             {
+                // Try Assembly.Location first
                 string location = Assembly.GetExecutingAssembly().Location;
+
+                // Fallback 1: Environment.ProcessPath (available in .NET 6+)
                 if (string.IsNullOrEmpty(location))
                 {
-                    // Fallback for single-file publish
-                    location = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                    location = Environment.ProcessPath;
                 }
+
+                // Fallback 2: Process.MainModule.FileName
+                if (string.IsNullOrEmpty(location))
+                {
+                    try
+                    {
+                        location = Process.GetCurrentProcess().MainModule?.FileName;
+                    }
+                    catch
+                    {
+                        // Ignore - MainModule can throw in some scenarios
+                    }
+                }
+
+                // Fallback 3: AppDomain.BaseDirectory
+                if (string.IsNullOrEmpty(location))
+                {
+                    location = AppDomain.CurrentDomain.BaseDirectory;
+                    // AppDomain.BaseDirectory already returns a directory, not a file
+                    return location?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                }
+
                 return !string.IsNullOrEmpty(location) ? Path.GetDirectoryName(location) : null;
             }
         }
@@ -147,12 +171,36 @@ namespace RunAsAdmin
         {
             get
             {
+                // Try Assembly.Location first
                 string location = Assembly.GetExecutingAssembly().Location;
+
+                // Fallback 1: Environment.ProcessPath (available in .NET 6+)
                 if (string.IsNullOrEmpty(location))
                 {
-                    // Fallback for single-file publish
-                    location = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
+                    location = Environment.ProcessPath;
                 }
+
+                // Fallback 2: Process.MainModule.FileName
+                if (string.IsNullOrEmpty(location))
+                {
+                    try
+                    {
+                        location = Process.GetCurrentProcess().MainModule?.FileName;
+                    }
+                    catch
+                    {
+                        // Ignore - MainModule can throw in some scenarios
+                    }
+                }
+
+                // Fallback 3: Construct from AppDomain.BaseDirectory + assembly name
+                if (string.IsNullOrEmpty(location))
+                {
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    string assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+                    location = Path.Combine(baseDir, assemblyName + ".exe");
+                }
+
                 return location;
             }
         }

@@ -257,20 +257,14 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                // Checks if the imput is empty
+                // Checks if the input is empty
                 if (String.IsNullOrWhiteSpace((string)DomainComboBox.Text) || String.IsNullOrWhiteSpace((string)UsernameComboBox.Text) || String.IsNullOrWhiteSpace(PasswordTextBox.Password))
                 {
-                    throw new ArgumentNullException();
-                }
-
-                // Validate BasePath and ExecutablePath
-                if (string.IsNullOrEmpty(GlobalVars.BasePath))
-                {
-                    GlobalVars.Loggi.Error("BasePath is null or empty, cannot restart application");
-                    await this.ShowMessageAsync("Error", "Unable to determine application path. Please restart the application manually.");
+                    await this.ShowMessageAsync("Input Required", "Please enter domain, username, and password.");
                     return;
                 }
 
+                // Validate ExecutablePath
                 if (string.IsNullOrEmpty(GlobalVars.ExecutablePath))
                 {
                     GlobalVars.Loggi.Error("ExecutablePath is null or empty, cannot restart application");
@@ -278,47 +272,117 @@ namespace RunAsAdmin.Views
                     return;
                 }
 
+                // Verify executable exists
+                if (!File.Exists(GlobalVars.ExecutablePath))
+                {
+                    GlobalVars.Loggi.Error("Executable not found at: {Path}", GlobalVars.ExecutablePath);
+                    await this.ShowMessageAsync("Error", $"Executable not found: {GlobalVars.ExecutablePath}");
+                    return;
+                }
+
                 Mouse.OverrideCursor = Cursors.Wait;
 
-                bool hasAccess = false;
-                await Task.Factory.StartNew(() =>
+                // Optional: Add directory security if BasePath is available
+                // This allows the impersonated user to access the application directory
+                if (!string.IsNullOrEmpty(GlobalVars.BasePath) && Directory.Exists(GlobalVars.BasePath))
                 {
-                    var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password));
-                    SimpleImpersonation.Impersonation.RunAsUser(credentials, SimpleImpersonation.LogonType.Interactive, () =>
+                    try
                     {
-                        hasAccess = Core.DirectoryHelper.HasDirectoryRights(GlobalVars.BasePath, System.Security.AccessControl.FileSystemRights.FullControl, winUser: WindowsIdentity.GetCurrent());
-					});
-                    if (!hasAccess)
-                    {
-                        Core.DirectoryHelper.AddDirectorySecurity(GlobalVars.BasePath, winUserString: String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username));
+                        await Task.Run(() =>
+                        {
+                            var credentials = new UserCredentials(GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username, Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password));
+                            bool hasAccess = false;
+
+                            try
+                            {
+                                SimpleImpersonation.Impersonation.RunAsUser(credentials, SimpleImpersonation.LogonType.Interactive, () =>
+                                {
+                                    hasAccess = Core.DirectoryHelper.HasDirectoryRights(GlobalVars.BasePath, System.Security.AccessControl.FileSystemRights.ReadAndExecute, winUser: WindowsIdentity.GetCurrent());
+                                });
+                            }
+                            catch (Exception impEx)
+                            {
+                                GlobalVars.Loggi.Warning(impEx, "Could not check directory rights via impersonation");
+                            }
+
+                            if (!hasAccess)
+                            {
+                                try
+                                {
+                                    Core.DirectoryHelper.AddDirectorySecurity(GlobalVars.BasePath, winUserString: String.Format(@"{0}\{1}", GlobalVars.SettingsHelper.Domain, GlobalVars.SettingsHelper.Username));
+                                    GlobalVars.Loggi.Information("Added directory security for user to access application");
+                                }
+                                catch (Exception secEx)
+                                {
+                                    GlobalVars.Loggi.Warning(secEx, "Could not add directory security (will attempt to start anyway)");
+                                }
+                            }
+                        });
                     }
-                });
+                    catch (Exception dirSecEx)
+                    {
+                        GlobalVars.Loggi.Warning(dirSecEx, "Directory security check failed (will attempt to start anyway)");
+                    }
+                }
 
-                await Task.Factory.StartNew(() =>
+                // Start the application with new credentials
+                await Task.Run(() =>
                 {
-                    Process p = new Process();
-
-                    ProcessStartInfo ps = new ProcessStartInfo
+                    try
                     {
-                        FileName = GlobalVars.ExecutablePath,
-                        Domain = GlobalVars.SettingsHelper.Domain,
-                        UserName = GlobalVars.SettingsHelper.Username,
-                        Password = Core.Helper.GetSecureString(Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password)),
-                        LoadUserProfile = true,
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
+                        ProcessStartInfo ps = new ProcessStartInfo
+                        {
+                            FileName = GlobalVars.ExecutablePath,
+                            Domain = GlobalVars.SettingsHelper.Domain,
+                            UserName = GlobalVars.SettingsHelper.Username,
+                            Password = Core.Helper.GetSecureString(Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password)),
+                            LoadUserProfile = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = false,
+                            WindowStyle = ProcessWindowStyle.Normal
+                        };
 
-                    p.StartInfo = ps;
-                    if (p.Start())
+                        GlobalVars.Loggi.Information("Starting application as {Domain}\\{User}", ps.Domain, ps.UserName);
+
+                        using (Process p = new Process { StartInfo = ps })
+                        {
+                            if (p.Start())
+                            {
+                                GlobalVars.Loggi.Information("Successfully started new process, exiting current instance");
+                                Application.Current.Dispatcher.Invoke(() => Environment.Exit(0));
+                            }
+                            else
+                            {
+                                GlobalVars.Loggi.Error("Failed to start process");
+                                Application.Current.Dispatcher.Invoke(async () =>
+                                {
+                                    await this.ShowMessageAsync("Error", "Failed to start the application with the specified credentials.");
+                                });
+                            }
+                        }
+                    }
+                    catch (Win32Exception win32Ex)
                     {
-                        Environment.Exit(0);
+                        GlobalVars.Loggi.Error(win32Ex, "Win32 error starting process: {Message}", win32Ex.Message);
+                        Application.Current.Dispatcher.Invoke(async () =>
+                        {
+                            await this.ShowMessageAsync("Error", $"Failed to start application: {win32Ex.Message}\n\nMake sure the credentials are correct and you have permission to run this application.");
+                        });
+                    }
+                    catch (Exception startEx)
+                    {
+                        GlobalVars.Loggi.Error(startEx, "Error starting process: {Message}", startEx.Message);
+                        Application.Current.Dispatcher.Invoke(async () =>
+                        {
+                            await this.ShowMessageAsync("Error", $"Failed to restart application: {startEx.Message}");
+                        });
                     }
                 });
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, "Error in RestartWithAdminRightsButton_Click: {Message}", ex.Message);
+                await this.ShowMessageAsync("Error", $"An unexpected error occurred: {ex.Message}");
             }
             finally
             {
@@ -330,59 +394,124 @@ namespace RunAsAdmin.Views
         {
             try
             {
-                // Checks if the imput is empty
+                // Checks if the input is empty
                 if (String.IsNullOrWhiteSpace((string)DomainComboBox.Text) || String.IsNullOrWhiteSpace((string)UsernameComboBox.Text) || String.IsNullOrWhiteSpace(PasswordTextBox.Password))
                 {
-                    throw new ArgumentNullException();
+                    await this.ShowMessageAsync("Input Required", "Please enter domain, username, and password.");
+                    return;
                 }
 
-                ///Mapped drives are not available from an elevated prompt 
+                ///Mapped drives are not available from an elevated prompt
                 ///when UAC is configured to "Prompt for credentials" in Windows
                 ///https://support.microsoft.com/en-us/help/3035277/mapped-drives-are-not-available-from-an-elevated-prompt-when-uac-is-co#detail%20to%20configure%20the%20registry%20entry
                 ///https://stackoverflow.com/a/25908932/11189474
                 System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog
                 {
-                    Filter = "Application (*.exe)|*.exe|All Files|*.*",// "All Files|*.*|Link (*.lnk)|*.lnk"
+                    Filter = "Application (*.exe)|*.exe|All Files|*.*",
                     Title = "Select the applications you want to start",
                     DereferenceLinks = true,
-                    Multiselect = true
+                    Multiselect = true,
+                    CheckFileExists = true
                 };
+
                 System.Windows.Forms.DialogResult result = fileDialog.ShowDialog();
                 if (result == System.Windows.Forms.DialogResult.OK || result == System.Windows.Forms.DialogResult.Yes)
                 {
-
                     string[] paths = fileDialog.FileNames;
-                    FileInfo file;
+                    int successCount = 0;
+                    int failureCount = 0;
+
                     foreach (var path in paths)
                     {
-                        file = new FileInfo(path);
-                        if (file.Exists && file.AlternateDataStreamExists("Zone.Identifier"))
+                        try
                         {
-                            bool deletedIdentifier = file.DeleteAlternateDataStream("Zone.Identifier");
-                            if (deletedIdentifier == false)
-                                return;
-                        }
-                        await Task.Factory.StartNew(() =>
-                        {
-                            try
+                            FileInfo file = new FileInfo(path);
+
+                            // Remove Zone.Identifier (downloaded from internet mark)
+                            if (file.Exists && file.AlternateDataStreamExists("Zone.Identifier"))
                             {
-                                var startInfo = new ProcessStartInfo(path)
+                                try
                                 {
-                                    UseShellExecute = true
-                                };
-                                UACHelper.UACHelper.StartElevated(startInfo);
+                                    bool deletedIdentifier = file.DeleteAlternateDataStream("Zone.Identifier");
+                                    if (deletedIdentifier)
+                                    {
+                                        GlobalVars.Loggi.Debug("Removed Zone.Identifier from: {Path}", path);
+                                    }
+                                }
+                                catch (Exception zoneEx)
+                                {
+                                    GlobalVars.Loggi.Warning(zoneEx, "Could not remove Zone.Identifier from: {Path}", path);
+                                }
                             }
-                            catch (Win32Exception win32ex)
+
+                            // Start the application with admin credentials (no UAC prompt)
+                            await Task.Run(() =>
                             {
-                                GlobalVars.Loggi.Error(win32ex, win32ex.Message);
-                            }
-                        });
+                                try
+                                {
+                                    ProcessStartInfo ps = new ProcessStartInfo
+                                    {
+                                        FileName = path,
+                                        Domain = GlobalVars.SettingsHelper.Domain,
+                                        UserName = GlobalVars.SettingsHelper.Username,
+                                        Password = Core.Helper.GetSecureString(Core.SecurityHelper.Decrypt(GlobalVars.SettingsHelper.Password)),
+                                        LoadUserProfile = true,
+                                        UseShellExecute = false,
+                                        CreateNoWindow = false,
+                                        WindowStyle = ProcessWindowStyle.Normal
+                                    };
+
+                                    GlobalVars.Loggi.Information("Starting {Program} as {Domain}\\{User}", Path.GetFileName(path), ps.Domain, ps.UserName);
+
+                                    using (Process p = new Process { StartInfo = ps })
+                                    {
+                                        if (p.Start())
+                                        {
+                                            GlobalVars.Loggi.Information("Successfully started: {Program}", Path.GetFileName(path));
+                                            successCount++;
+                                        }
+                                        else
+                                        {
+                                            GlobalVars.Loggi.Error("Failed to start: {Program}", Path.GetFileName(path));
+                                            failureCount++;
+                                        }
+                                    }
+                                }
+                                catch (Win32Exception win32ex)
+                                {
+                                    GlobalVars.Loggi.Error(win32ex, "Win32 error starting {Program}: {Message}", Path.GetFileName(path), win32ex.Message);
+                                    failureCount++;
+                                }
+                                catch (Exception startEx)
+                                {
+                                    GlobalVars.Loggi.Error(startEx, "Error starting {Program}: {Message}", Path.GetFileName(path), startEx.Message);
+                                    failureCount++;
+                                }
+                            });
+                        }
+                        catch (Exception fileEx)
+                        {
+                            GlobalVars.Loggi.Error(fileEx, "Error processing file: {Path}", path);
+                            failureCount++;
+                        }
+                    }
+
+                    // Show summary
+                    if (successCount > 0 || failureCount > 0)
+                    {
+                        string message = $"Started: {successCount} program(s)";
+                        if (failureCount > 0)
+                        {
+                            message += $"\nFailed: {failureCount} program(s)";
+                        }
+                        await this.ShowMessageAsync("Program Start Summary", message);
                     }
                 }
             }
             catch (Exception ex)
             {
-                GlobalVars.Loggi.Error(ex, ex.Message);
+                GlobalVars.Loggi.Error(ex, "Error in StartProgramWithAdminRightsButton_Click: {Message}", ex.Message);
+                await this.ShowMessageAsync("Error", $"An unexpected error occurred: {ex.Message}");
             }
         }
         #endregion
