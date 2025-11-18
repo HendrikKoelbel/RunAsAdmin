@@ -73,7 +73,6 @@ You can easily download and run the program [here](https://github.com/HendrikKoe
 ### Utilities
 
 * **[Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)** - High-performance JSON framework
-* **[Resource.Embedder](https://github.com/MarcStan/resource-embedder)** - Embeds satellite assemblies into main executable
 * **[TaskScheduler](https://github.com/dahall/TaskScheduler)** - Windows Task Scheduler wrapper
 * **[Trinet.Core.IO.Ntfs](https://github.com/RichardD2/NTFS-Streams)** - NTFS Alternate Data Streams support
 * **[Castle.Core](https://github.com/castleproject/Core)** - Core library for dynamic proxy generation
